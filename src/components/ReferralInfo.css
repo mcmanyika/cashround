@@ -1,0 +1,80 @@
+.referral-info {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 800px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.referral-info h4 {
+  color: #333;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.referral-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.referral-link {
+  position: relative;
+}
+
+.referral-level {
+  display: flex;
+  gap: 15px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.level-number {
+  background-color: #007bff;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.level-info {
+  flex-grow: 1;
+}
+
+.level-label {
+  color: #666;
+  font-size: 0.9em;
+  margin: 5px 0;
+}
+
+.address {
+  background-color: #e9ecef;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  word-break: break-all;
+  margin: 5px 0;
+  font-size: 0.9em;
+}
+
+.chain-connector {
+  position: absolute;
+  left: 15px;
+  top: 100%;
+  width: 2px;
+  height: 20px;
+  background-color: #007bff;
+}
+
+.referral-info p {
+  color: #666;
+  margin: 5px 0;
+} 
