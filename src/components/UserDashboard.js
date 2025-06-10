@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TreeContract from '../abis/Tree.json';
 import CONTRACT_ADDRESS from '../config/contractAddresses';
+import './UserDashboard.css';
 
 const UserDashboard = ({ web3, account }) => {
   const [networkId, setNetworkId] = useState(null);
@@ -103,73 +104,102 @@ const UserDashboard = ({ web3, account }) => {
   }, [web3, account, contractAddress]);
 
   return (
-    <div className="user-dashboard card p-4 mt-4 mb-4">
-      <h2 className="mb-3">User Dashboard</h2>
-      <p><strong>Network ID:</strong> {networkId}</p>
-      <p><strong>Contract Address:</strong> <span style={{fontFamily: 'monospace'}}>{contractAddress}</span></p>
-      <p><strong>Your Address:</strong> <span style={{fontFamily: 'monospace'}}>{account}</span></p>
-      <p><strong>Referred By:</strong> <span style={{fontFamily: 'monospace'}}>{inviter && inviter !== '0x0000000000000000000000000000000000000000' ? inviter : 'None'}</span></p>
-      {loading && <div>Loading payments...</div>}
-      {error && <div className="text-danger">{error}</div>}
-      
-      {/* Sent Transactions */}
-      <div className="mt-4">
-        <h3>Sent Transactions</h3>
-        {!loading && sentPayments.length === 0 && <div>No sent transactions yet.</div>}
-        {!loading && sentPayments.length > 0 && (
-          <div className="table-responsive">
-            <table className="table table-bordered table-sm mt-3">
-              <thead className="thead-light">
-                <tr>
-                  <th>To</th>
-                  <th>Amount (ETH)</th>
-                  <th>Tx Hash</th>
-                  <th>Block</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sentPayments.map((event, idx) => (
-                  <tr key={event.id || event.transactionHash + idx}>
-                    <td style={{fontFamily: 'monospace'}}>{event.returnValues.to}</td>
-                    <td>{web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')}</td>
-                    <td style={{fontFamily: 'monospace', fontSize: '0.9em'}}>{event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}</td>
-                    <td>{event.blockNumber}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="user-dashboard">
+      <div className="dashboard-header">
+        <h2>Dashboard</h2>
+        <div className="network-info">
+          <div className="info-item">
+            <span className="label">Network ID</span>
+            <span className="value">{networkId}</span>
           </div>
-        )}
+          <div className="info-item">
+            <span className="label">Contract Address</span>
+            <span className="value monospace">{contractAddress}</span>
+          </div>
+          <div className="info-item">
+            <span className="label">Your Address</span>
+            <span className="value monospace">{account}</span>
+          </div>
+          <div className="info-item">
+            <span className="label">Referred By</span>
+            <span className="value monospace">
+              {inviter && inviter !== '0x0000000000000000000000000000000000000000' ? inviter : 'None'}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Received Transactions */}
-      <div className="mt-4">
-        <h3>Received Transactions</h3>
-        {!loading && receivedPayments.length === 0 && <div>No received transactions yet.</div>}
-        {!loading && receivedPayments.length > 0 && (
-          <div className="table-responsive">
-            <table className="table table-bordered table-sm mt-3">
-              <thead className="thead-light">
-                <tr>
-                  <th>From</th>
-                  <th>Amount (ETH)</th>
-                  <th>Tx Hash</th>
-                  <th>Block</th>
-                </tr>
-              </thead>
-              <tbody>
-                {receivedPayments.map((event, idx) => (
-                  <tr key={event.id || event.transactionHash + idx}>
-                    <td style={{fontFamily: 'monospace'}}>{event.returnValues.from}</td>
-                    <td>{web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')}</td>
-                    <td style={{fontFamily: 'monospace', fontSize: '0.9em'}}>{event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}</td>
-                    <td>{event.blockNumber}</td>
+      {loading && <div className="loading-spinner">Loading payments...</div>}
+      {error && <div className="error-message">{error}</div>}
+      
+      <div className="transactions-container">
+        {/* Sent Transactions */}
+        <div className="transaction-section">
+          <h3>Sent Transactions</h3>
+          {!loading && sentPayments.length === 0 && (
+            <div className="no-transactions">No sent transactions yet.</div>
+          )}
+          {!loading && sentPayments.length > 0 && (
+            <div className="table-container">
+              <table className="transactions-table">
+                <thead>
+                  <tr>
+                    <th>To</th>
+                    <th>Amount (ETH)</th>
+                    <th>Tx Hash</th>
+                    <th>Block</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {sentPayments.map((event, idx) => (
+                    <tr key={event.id || event.transactionHash + idx}>
+                      <td className="monospace">{event.returnValues.to}</td>
+                      <td>{web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')}</td>
+                      <td className="monospace tx-hash">
+                        {event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}
+                      </td>
+                      <td>{event.blockNumber}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Received Transactions */}
+        <div className="transaction-section">
+          <h3>Received Transactions</h3>
+          {!loading && receivedPayments.length === 0 && (
+            <div className="no-transactions">No received transactions yet.</div>
+          )}
+          {!loading && receivedPayments.length > 0 && (
+            <div className="table-container">
+              <table className="transactions-table">
+                <thead>
+                  <tr>
+                    <th>From</th>
+                    <th>Amount (ETH)</th>
+                    <th>Tx Hash</th>
+                    <th>Block</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {receivedPayments.map((event, idx) => (
+                    <tr key={event.id || event.transactionHash + idx}>
+                      <td className="monospace">{event.returnValues.from}</td>
+                      <td>{web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')}</td>
+                      <td className="monospace tx-hash">
+                        {event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}
+                      </td>
+                      <td>{event.blockNumber}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

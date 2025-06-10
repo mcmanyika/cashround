@@ -4,8 +4,8 @@ const CONTRACT_ADDRESS = {
   4: 'YOUR_RINKEBY_ADDRESS', // Rinkeby
   5: 'YOUR_GOERLI_ADDRESS',  // Goerli
   42: 'YOUR_KOVAN_ADDRESS',  // Kovan
-  1337: '0xD2a11bD3d48daDa994cdFC9076430a4f2e992691', // Local Ganache network (latest)
-  5777: '0x40cB3A1cEE010B6bb5c7A8824c29Cd244029bc0b' // Previous Ganache network
+  5777: '0xD2a11bD3d48daDa994cdFC9076430a4f2e992691', // Local Ganache network (latest)
+  // 5777: '0xB4CcBc164b0CC17881612049f4d91A00b6136d29' // Previous Ganache network
 };
 
 export default CONTRACT_ADDRESS; 

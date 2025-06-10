@@ -77,12 +77,14 @@ class App extends Component {
             <div className="container d-flex align-items-center position-relative">
               <div className="flex-grow-1 d-flex justify-content-center">
                 <Link to="/" className="navbar-brand text-center">
+                  <img src={logo} alt="Kumusha" style={{height: '32px', marginRight: '12px'}} />
                   KUMUSHA ASSOCIATES
                 </Link>
               </div>
               {isConnected && (
                 <>
                   <span className="navbar-text text-light bg-dark px-3 py-1 rounded shadow-sm d-flex align-items-center" style={{fontWeight: 500, fontFamily: 'monospace', fontSize: '0.8rem'}}>
+                    <span className="mr-2">●</span>
                     {this.formatAddress(account)}
                   </span>
                   <Link to="/dashboard" className="btn btn-outline-info btn-sm ml-3">
@@ -110,25 +112,47 @@ class App extends Component {
             <Route path="/">
               <div className="container">
                 <div className="hero-section text-center p-4">
-                  <img src={logo} className="App-logo mb-3" alt="logo" style={{width: '120px'}} />
                   <h1 className="hero-title">Connect. Refer. Invest in Africa's Future.</h1>
                   <p className="hero-subtitle">Join Kumusha Investments' affiliate program. Refer others, and help channel diaspora capital into high-impact opportunities across Africa.</p>
+                  {!isConnected && (
+                    <div className="mt-4">
+                      <MetaMaskConnect
+                        account={account}
+                        setAccount={this.setAccount}
+                        isConnected={isConnected}
+                        setIsConnected={this.setIsConnected}
+                        error={error}
+                        setError={this.setError}
+                        web3={web3}
+                        setWeb3={this.setWeb3}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="steps-section mt-5">
+                <div className="steps-section">
                   <div className="row text-center">
                     <div className="col-md-4 step">
-                      <div className="step-icon mb-2"><span role="img" aria-label="link">🔗</span></div>
-                      <h3>1. Connect</h3>
+                      <div className="step-icon mb-3">
+                        <div className="step-number">1</div>
+                        <span role="img" aria-label="link">🔗</span>
+                      </div>
+                      <h3>Connect</h3>
                       <p>Join Kumusha Investments' affiliate program and start your journey to making an impact.</p>
                     </div>
                     <div className="col-md-4 step">
-                      <div className="step-icon mb-2"><span role="img" aria-label="refer">🤝</span></div>
-                      <h3>2. Refer</h3>
+                      <div className="step-icon mb-3">
+                        <div className="step-number">2</div>
+                        <span role="img" aria-label="refer">🤝</span>
+                      </div>
+                      <h3>Refer</h3>
                       <p>Invite friends, family, and fellow diaspora members to join Kumusha and grow our investment community together.</p>
                     </div>
                     <div className="col-md-4 step">
-                      <div className="step-icon mb-2"><span role="img" aria-label="invest">🌍</span></div>
-                      <h3>3. Invest & Earn</h3>
+                      <div className="step-icon mb-3">
+                        <div className="step-number">3</div>
+                        <span role="img" aria-label="invest">🌍</span>
+                      </div>
+                      <h3>Invest & Earn</h3>
                       <p>Help channel capital into Africa's future. Earn rewards for every successful referral and investment made through your network.</p>
                     </div>
                   </div>
@@ -137,18 +161,24 @@ class App extends Component {
                   <h2 className="faq-title text-center mb-4">Frequently Asked Questions</h2>
                   <div className="row">
                     <div className="col-md-6 mb-4">
-                      <h4>What is Kumusha Investments?</h4>
-                      <p>Kumusha Investments is a platform that brings together capital from the African diaspora to invest in high-impact opportunities across Africa.</p>
-                      <h4>How does the affiliate program work?</h4>
-                      <p>By joining our affiliate program, you can refer others to Kumusha Investments. When your referrals join and invest, you earn rewards and help grow Africa's economic future.</p>
-                      <h4>Who can join?</h4>
-                      <p>Anyone in the diaspora or locally who wants to make a difference by investing in Africa's growth can join the program.</p>
+                      <div className="faq-item">
+                        <h4>What is Kumusha Investments?</h4>
+                        <p>Kumusha Investments is a platform that brings together capital from the African diaspora to invest in high-impact opportunities across Africa.</p>
+                      </div>
+                      <div className="faq-item">
+                        <h4>How does the affiliate program work?</h4>
+                        <p>By joining our affiliate program, you can refer others to Kumusha Investments. When your referrals join and invest, you earn rewards and help grow Africa's economic future.</p>
+                      </div>
                     </div>
                     <div className="col-md-6 mb-4">
-                      <h4>How do I earn rewards?</h4>
-                      <p>You earn rewards for every successful referral who joins and invests through Kumusha Investments. The more you refer, the more you can earn while supporting Africa's development.</p>
-                      <h4>How do I get started?</h4>
-                      <p>Simply connect your wallet, join the affiliate program, and start referring others. Together, we can build a brighter future for Africa.</p>
+                      <div className="faq-item">
+                        <h4>How do I earn rewards?</h4>
+                        <p>You earn rewards for every successful referral who joins and invests through Kumusha Investments. The more you refer, the more you can earn while supporting Africa's development.</p>
+                      </div>
+                      <div className="faq-item">
+                        <h4>Who can join?</h4>
+                        <p>Anyone in the diaspora or locally who wants to make a difference by investing in Africa's growth can join the program.</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -159,7 +189,7 @@ class App extends Component {
                     </div>
                     <div className="banner-divider mx-4" />
                     <div className="banner-text flex-grow-1">
-                      <h2 className="mb-3">Refer, Invest, and Build Africa's Future.</h2>
+                      <h2 className="mb-3 text-muted">Refer, Invest, and Build Africa's Future.</h2>
                       {isConnected && (
                         <div className="mt-4">
                           <ReferralInfo web3={web3} account={account} onJoinStatusChange={this.setHasJoined} />
