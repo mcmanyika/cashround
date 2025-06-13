@@ -72,13 +72,13 @@ class App extends Component {
     return (
       <Router>
         <div className="landing-page">
-          <ToastContainer position="top-center" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
+          <ToastContainer position="bottom-center" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
           <nav className="navbar navbar-dark bg-dark fixed-top shadow">
             <div className="container d-flex align-items-center position-relative">
               <div className="flex-grow-1 d-flex justify-content-center">
                 <Link to="/" className="navbar-brand text-center">
-                  <img src={logo} alt="Kumusha" style={{height: '32px', marginRight: '12px'}} />
-                  KUMUSHA ASSOCIATES
+                  <img src={logo} alt="TokenHub" style={{height: '32px', marginRight: '12px'}} />
+                  TOKENHUB
                 </Link>
               </div>
               {isConnected && (
@@ -110,25 +110,37 @@ class App extends Component {
               <UserDashboard web3={web3} account={account} />
             </Route>
             <Route path="/">
-              <div className="container">
-                <div className="hero-section text-center p-4">
-                  <h1 className="hero-title">Connect. Refer. Invest in Africa's Future.</h1>
-                  <p className="hero-subtitle">Join Kumusha Investments' affiliate program. Refer others, and help channel diaspora capital into high-impact opportunities across Africa.</p>
-                  {!isConnected && (
-                    <div className="mt-4">
-                      <MetaMaskConnect
-                        account={account}
-                        setAccount={this.setAccount}
-                        isConnected={isConnected}
-                        setIsConnected={this.setIsConnected}
-                        error={error}
-                        setError={this.setError}
-                        web3={web3}
-                        setWeb3={this.setWeb3}
-                      />
-                    </div>
-                  )}
+
+            <div className="hero-image-container items-center justify-content-center d-flex" style={{
+              backgroundImage: "url('/banner.jpg')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              display: 'flex',
+              alignItems: 'flex-end'
+            }}>
+            </div>
+              
+            <div className="container">
+                <div className="hero-section w-full text-center p-4">
+                  <h1 className="hero-title">Transform Your Membership & Affiliate Programs with Blockchain</h1>
+                  <p className="hero-subtitle">TokenHub helps organizations streamline their membership management and affiliate programs using cutting-edge blockchain technology. Join us to revolutionize how you engage with your community.</p>
+                  <div className="container">
+              {isConnected && (
+                <div className="container d-flex justify-content-center align-items-center w-100 mb-4">
+                  <div className="text-center w-100" style={{maxWidth: '800px'}}>
+                      <ReferralInfo web3={web3} account={account} onJoinStatusChange={this.setHasJoined} />
+                      {!hasJoined && (
+                        <div className="mt-4">
+                          <ReferralForm web3={web3} account={account} />
+                        </div>
+                      )}
+                  </div>
                 </div>
+              )}
+            </div>
+                </div>
+                
                 <div className="steps-section">
                   <div className="row text-center">
                     <div className="col-md-4 step">
@@ -137,23 +149,48 @@ class App extends Component {
                         <span role="img" aria-label="link">🔗</span>
                       </div>
                       <h3>Connect</h3>
-                      <p>Join Kumusha Investments' affiliate program and start your journey to making an impact.</p>
+                      <p>Integrate your organization with TokenHub's blockchain-powered platform and start managing memberships with unprecedented efficiency.</p>
                     </div>
                     <div className="col-md-4 step">
                       <div className="step-icon mb-3">
                         <div className="step-number">2</div>
                         <span role="img" aria-label="refer">🤝</span>
                       </div>
-                      <h3>Refer</h3>
-                      <p>Invite friends, family, and fellow diaspora members to join Kumusha and grow our investment community together.</p>
+                      <h3>Manage</h3>
+                      <p>Leverage our blockchain technology to track memberships, manage affiliate relationships, and automate reward distributions with complete transparency.</p>
                     </div>
                     <div className="col-md-4 step">
                       <div className="step-icon mb-3">
                         <div className="step-number">3</div>
                         <span role="img" aria-label="invest">🌍</span>
                       </div>
-                      <h3>Invest & Earn</h3>
-                      <p>Help channel capital into Africa's future. Earn rewards for every successful referral and investment made through your network.</p>
+                      <h3>Grow</h3>
+                      <p>Expand your community with secure, verifiable membership tracking and automated affiliate program management powered by blockchain.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="client-logos-section py-5">
+                  <div className="container">
+                    <p className="text-center text-muted mb-4">Trusted by leading organizations worldwide</p>
+                    <div className="row align-items-center justify-content-center">
+                      <div className="col-4 col-md-2 mb-4 mb-md-0">
+                        <img src="/logo.png" alt="Client 1" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
+                      </div>
+                      <div className="col-4 col-md-2 mb-4 mb-md-0">
+                        <img src="/logo.png" alt="Client 2" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
+                      </div>
+                      <div className="col-4 col-md-2 mb-4 mb-md-0">
+                        <img src="/logo.png" alt="Client 3" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
+                      </div>
+                      <div className="col-4 col-md-2 mb-4 mb-md-0">
+                        <img src="/logo.png" alt="Client 4" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
+                      </div>
+                      <div className="col-4 col-md-2 mb-4 mb-md-0">
+                        <img src="/logo.png" alt="Client 5" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
+                      </div>
+                      <div className="col-4 col-md-2 mb-4 mb-md-0">
+                        <img src="/logo.png" alt="Client 6" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -162,22 +199,22 @@ class App extends Component {
                   <div className="row">
                     <div className="col-md-6 mb-4">
                       <div className="faq-item">
-                        <h4>What is Kumusha Investments?</h4>
-                        <p>Kumusha Investments is a platform that brings together capital from the African diaspora to invest in high-impact opportunities across Africa.</p>
+                        <h4>What is TokenHub?</h4>
+                        <p>TokenHub is a blockchain-based platform that helps organizations manage their memberships and affiliate programs. We provide secure, transparent, and efficient solutions for tracking members, managing relationships, and automating rewards.</p>
                       </div>
                       <div className="faq-item">
-                        <h4>How does the affiliate program work?</h4>
-                        <p>By joining our affiliate program, you can refer others to Kumusha Investments. When your referrals join and invest, you earn rewards and help grow Africa's economic future.</p>
+                        <h4>How does the platform work?</h4>
+                        <p>Our platform uses blockchain technology to create immutable records of memberships and affiliate relationships. This ensures transparency, security, and automated reward distribution while eliminating manual tracking and verification processes.</p>
                       </div>
                     </div>
                     <div className="col-md-6 mb-4">
                       <div className="faq-item">
-                        <h4>How do I earn rewards?</h4>
-                        <p>You earn rewards for every successful referral who joins and invests through Kumusha Investments. The more you refer, the more you can earn while supporting Africa's development.</p>
+                        <h4>What are the benefits?</h4>
+                        <p>Organizations benefit from reduced administrative overhead, increased transparency, and automated reward distribution. Members and affiliates enjoy secure verification of their status and instant access to their rewards.</p>
                       </div>
                       <div className="faq-item">
-                        <h4>Who can join?</h4>
-                        <p>Anyone in the diaspora or locally who wants to make a difference by investing in Africa's growth can join the program.</p>
+                        <h4>Who can use TokenHub?</h4>
+                        <p>Any organization looking to modernize their membership management or affiliate program can benefit from our platform. We serve businesses, associations, and communities of all sizes.</p>
                       </div>
                     </div>
                   </div>
@@ -185,17 +222,11 @@ class App extends Component {
                 <div className="bottom-banner d-flex align-items-center justify-content-center">
                   <div className="banner-content container d-flex align-items-center py-4">
                     <div className="banner-logo pr-4 text-center">
-                      <img src={logo} alt="Kumusha logo" style={{width: '90px'}} />
+                      <img src={logo} alt="TokenHub logo" style={{width: '90px'}} />
                     </div>
                     <div className="banner-divider mx-4" />
                     <div className="banner-text flex-grow-1">
-                      <h2 className="mb-3 text-muted">Refer, Invest, and Build Africa's Future.</h2>
-                      {isConnected && (
-                        <div className="mt-4">
-                          <ReferralInfo web3={web3} account={account} onJoinStatusChange={this.setHasJoined} />
-                          {!hasJoined && <ReferralForm web3={web3} account={account} />}
-                        </div>
-                      )}
+                      <h2 className="mb-3 text-muted">Transform Your Membership Management with Blockchain Technology.</h2>
                     </div>
                   </div>
                 </div>
@@ -211,7 +242,7 @@ class App extends Component {
               <a href="javascript:void(0)">Contact us</a>
             </div>
             <div className="footer-copyright">
-              © {new Date().getFullYear()} Kumusha Investments. Empowering Africa's Future.
+              © {new Date().getFullYear()} TokenHub. Revolutionizing Membership Management.
             </div>
           </footer>
         </div>

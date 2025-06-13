@@ -36,6 +36,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "@chainlink/contracts": "^1.4.0",
     "ganache": "^7.9.2",
     "truffle": "^5.11.5"
   }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TreeContract from '../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -6,21 +6,30 @@ import CONTRACT_ADDRESS from '../config/contractAddresses';
 
 const ReferralForm = ({ web3, account }) => {
   const [referrerAddress, setReferrerAddress] = useState('');
+  const [ethAmount, setEthAmount] = useState('1');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [networkId, setNetworkId] = useState(null);
   const [showBecomeMember, setShowBecomeMember] = useState(false);
+  const [contract, setContract] = useState(null);
 
-  // Get network ID when component mounts or web3 changes
-  React.useEffect(() => {
-    const getNetworkId = async () => {
+  // Get network ID and initialize contract when component mounts or web3 changes
+  useEffect(() => {
+    const initialize = async () => {
       if (web3) {
         const id = await web3.eth.net.getId();
         setNetworkId(id);
+        if (CONTRACT_ADDRESS[id]) {
+          const contractInstance = new web3.eth.Contract(
+            TreeContract.abi,
+            CONTRACT_ADDRESS[id]
+          );
+          setContract(contractInstance);
+        }
       }
     };
-    getNetworkId();
+    initialize();
   }, [web3]);
 
   const handleSubmit = async (e) => {
@@ -35,26 +44,25 @@ const ReferralForm = ({ web3, account }) => {
       return;
     }
 
+    if (!ethAmount || isNaN(ethAmount) || parseFloat(ethAmount) <= 0) {
+      toast.error('Please enter a valid ETH amount');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
       setSuccess('');
 
-      // Get the contract instance with the correct address
-      const contract = new web3.eth.Contract(
-        TreeContract.abi,
-        CONTRACT_ADDRESS[networkId]
-      );
-
-      // Convert 0.001610 ETH to Wei
-      const amount = web3.utils.toWei('0.001610', 'ether');
+      const ethAmountWei = web3.utils.toWei(ethAmount, 'ether');
 
       // Call the enter function
       await contract.methods.enter(referrerAddress, referrerAddress)
-        .send({ from: account, value: amount });
+        .send({ from: account, value: ethAmountWei });
 
       toast.success('Successfully joined the referral tree!');
       setReferrerAddress('');
+      setEthAmount('');
       setShowBecomeMember(true);
     } catch (err) {
       toast.error(err.message || 'An error occurred while processing your request');
@@ -86,15 +94,23 @@ const ReferralForm = ({ web3, account }) => {
           <input
             type="text"
             id="referrerAddress"
-            className="form-control"
+            className="form-control mb-3"
             value={referrerAddress}
             onChange={(e) => setReferrerAddress(e.target.value)}
             placeholder="Enter your referrer's Ethereum address"
             required
           />
         </div>
-        <button 
-          type="submit" 
+
+        {/* Hidden amount field */}
+        <input
+          type="hidden"
+          value={ethAmount}
+          onChange={(e) => setEthAmount(e.target.value)}
+        />
+
+        <button
+          type="submit"
           className="btn btn-warning btn-lg font-weight-bold w-100 mb-1 mt-1"
           disabled={loading || !web3 || !account || !CONTRACT_ADDRESS[networkId]}
         >

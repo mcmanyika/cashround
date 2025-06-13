@@ -71,9 +71,29 @@ body {
   line-height: 1.6;
 }
 
+/* Hero image */
+.hero-image-container {
+  width: 100%;
+  margin: 0 -15px;  /* Negative margin to break out of container */
+  position: relative;
+  overflow: hidden;
+  height: 500px;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
 /* Steps section */
 .steps-section {
-  padding:  0;
+  padding: 4rem 0;
+  position: relative;
+  z-index: 1;
+  background: white;
 }
 
 .step {
