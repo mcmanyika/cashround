@@ -3,12 +3,11 @@ import { useHistory } from 'react-router-dom';
 import TreeContract from '../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CONTRACT_ADDRESS from '../config/contractAddresses';
 
 const ReferralForm = ({ web3, account }) => {
   const history = useHistory();
   const [referrerAddress, setReferrerAddress] = useState('');
-  const [ethAmount, setEthAmount] = useState('1');
+  const [ethAmount, setEthAmount] = useState('5');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -23,14 +22,20 @@ const ReferralForm = ({ web3, account }) => {
   useEffect(() => {
     const initialize = async () => {
       if (web3) {
-        const id = await web3.eth.net.getId();
-        setNetworkId(id);
-        if (CONTRACT_ADDRESS[id]) {
-          const contractInstance = new web3.eth.Contract(
-            TreeContract.abi,
-            CONTRACT_ADDRESS[id]
-          );
-          setContract(contractInstance);
+        try {
+          const id = await web3.eth.net.getId();
+          setNetworkId(id);
+          const networkData = TreeContract.networks[id];
+          
+          if (networkData && networkData.address) {
+            const contractInstance = new web3.eth.Contract(
+              TreeContract.abi,
+              networkData.address
+            );
+            setContract(contractInstance);
+          }
+        } catch (error) {
+          // Silent error handling
         }
       }
     };
@@ -77,7 +82,7 @@ const ReferralForm = ({ web3, account }) => {
       return;
     }
 
-    if (!networkId || !CONTRACT_ADDRESS[networkId]) {
+    if (!networkId || !TreeContract.networks[networkId]) {
       toast.error('Please connect to a supported network');
       return;
     }
@@ -213,7 +218,7 @@ const ReferralForm = ({ web3, account }) => {
         draggable
         pauseOnHover
       />
-      {networkId && !CONTRACT_ADDRESS[networkId] && (
+      {networkId && !TreeContract.networks[networkId] && (
         <div style={{
           background: 'rgba(255, 193, 7, 0.1)',
           border: '1px solid #ffc107',
@@ -294,7 +299,7 @@ const ReferralForm = ({ web3, account }) => {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             letterSpacing: '0.5px'
           }}
-          disabled={loading || !web3 || !account || !CONTRACT_ADDRESS[networkId]}
+          disabled={loading || !web3 || !account || !TreeContract.networks[networkId]}
           onMouseEnter={(e) => {
             if (!e.target.disabled) {
               e.target.style.transform = 'translateY(-1px)';

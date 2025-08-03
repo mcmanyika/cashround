@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom';
 import TreeContract from '../abis/Tree.json';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CONTRACT_ADDRESS from '../config/contractAddresses';
 
 const SendToReferrers = ({ web3, account }) => {
   const history = useHistory();
@@ -31,14 +30,20 @@ const SendToReferrers = ({ web3, account }) => {
   useEffect(() => {
     const initialize = async () => {
       if (web3) {
-        const id = await web3.eth.net.getId();
-        setNetworkId(id);
-        if (CONTRACT_ADDRESS[id]) {
-          const contractInstance = new web3.eth.Contract(
-            TreeContract.abi,
-            CONTRACT_ADDRESS[id]
-          );
-          setContract(contractInstance);
+        try {
+          const networkId = await web3.eth.net.getId();
+          const networkData = TreeContract.networks[networkId];
+          setNetworkId(networkId);
+          
+          if (networkData && networkData.address) {
+            const contractInstance = new web3.eth.Contract(
+              TreeContract.abi,
+              networkData.address
+            );
+            setContract(contractInstance);
+          }
+        } catch (error) {
+          // Silent error handling
         }
       }
     };
@@ -135,7 +140,7 @@ const SendToReferrers = ({ web3, account }) => {
   }, [contract, account, history]);
 
   const handleSendToReferrers = async () => {
-    if (!web3 || !account || !networkId || !CONTRACT_ADDRESS[networkId]) {
+    if (!web3 || !account || !networkId) {
       setError('Please connect your wallet first');
       return;
     }
@@ -185,13 +190,8 @@ const SendToReferrers = ({ web3, account }) => {
   };
 
   const handleBecomeMember = async () => {
-    if (!web3 || !account || !networkId || !CONTRACT_ADDRESS[networkId]) {
+    if (!web3 || !account || !contract) {
       setError('Please connect your wallet first');
-      return;
-    }
-
-    if (!contract) {
-      setError('Contract not initialized');
       return;
     }
 
@@ -219,7 +219,6 @@ const SendToReferrers = ({ web3, account }) => {
 
       // Get the top address (contract owner) as the default referrer
       const topAddress = await contract.methods.top().call();
-      console.log('Using top address as referrer:', topAddress);
       
       // Use the enter function with the top address as referrer
       const result = await contract.methods.enter(topAddress, account).send({
@@ -228,7 +227,6 @@ const SendToReferrers = ({ web3, account }) => {
         gas: 300000 // Explicit gas limit
       });
 
-      console.log('Transaction result:', result);
       toast.success('✅ Successfully became a member!');
       
       // Refresh the data
@@ -240,7 +238,6 @@ const SendToReferrers = ({ web3, account }) => {
         history.push('/');
       }, 2000); // Wait 2 seconds to show the success message
     } catch (err) {
-      console.error('Become member error:', err);
       if (err.code === 4001) {
         setError('Transaction was rejected by the user.');
       } else if (err.message && err.message.includes('User denied')) {

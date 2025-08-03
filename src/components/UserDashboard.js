@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import TreeContract from '../abis/Tree.json';
-import CONTRACT_ADDRESS from '../config/contractAddresses';
 import './UserDashboard.css';
 
 const UserDashboard = ({ web3, account }) => {
@@ -17,20 +16,16 @@ const UserDashboard = ({ web3, account }) => {
       if (web3) {
         try {
           const id = await web3.eth.net.getId();
-          console.log('Connected to network ID:', id);
           setNetworkId(id);
           
           // Get the contract address for this network
-          const address = CONTRACT_ADDRESS[id];
-          if (address) {
-            console.log('Using contract address:', address);
-            setContractAddress(address);
+          const networkData = TreeContract.networks[id];
+          if (networkData && networkData.address) {
+            setContractAddress(networkData.address);
           } else {
-            console.warn('No contract address found for network ID:', id);
-            setError(`No contract address configured for network ID ${id}`);
+            setError(`No contract found on network ID ${id}`);
           }
         } catch (err) {
-          console.error('Error getting network ID:', err);
           setError('Error connecting to network');
         }
       }
@@ -48,9 +43,6 @@ const UserDashboard = ({ web3, account }) => {
       setLoading(true);
       setError('');
       try {
-        console.log('Fetching payments for account:', account);
-        console.log('Using contract address:', contractAddress);
-        
         const contract = new web3.eth.Contract(
           TreeContract.abi,
           contractAddress
@@ -61,7 +53,6 @@ const UserDashboard = ({ web3, account }) => {
           fromBlock: 0,
           toBlock: 'latest',
         });
-        console.log('All Payments events:', events);
         
         // Filter sent and received payments
         const sent = events.filter(event => 
@@ -76,7 +67,6 @@ const UserDashboard = ({ web3, account }) => {
         setSentPayments(sent);
         setReceivedPayments(received);
       } catch (err) {
-        console.error('Error fetching payments:', err);
         setError(err.message || 'Error fetching payments');
       } finally {
         setLoading(false);
@@ -97,7 +87,6 @@ const UserDashboard = ({ web3, account }) => {
         setInviter(userInfo.inviter);
       } catch (err) {
         setInviter('');
-        console.error('Error fetching inviter:', err);
       }
     };
     fetchInviter();

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import TreeContract from '../abis/Tree.json';
 import './ReferralInfo.css';
 import SendToReferrers from './SendToReferrers';
-import CONTRACT_ADDRESS from '../config/contractAddresses';
 
 const ReferralInfo = ({ web3, account, onJoinStatusChange }) => {
   const [referralChain, setReferralChain] = useState([]);
@@ -13,8 +12,12 @@ const ReferralInfo = ({ web3, account, onJoinStatusChange }) => {
   useEffect(() => {
     const getNetworkId = async () => {
       if (web3) {
-        const id = await web3.eth.net.getId();
-        setNetworkId(id);
+        try {
+          const id = await web3.eth.net.getId();
+          setNetworkId(id);
+        } catch (error) {
+          // Silent error handling
+        }
       }
     };
     getNetworkId();
@@ -22,7 +25,7 @@ const ReferralInfo = ({ web3, account, onJoinStatusChange }) => {
 
   useEffect(() => {
     const getReferrerInfo = async () => {
-      if (!web3 || !account || !networkId || !CONTRACT_ADDRESS[networkId]) {
+      if (!web3 || !account || !networkId) {
         setLoading(false);
         if (onJoinStatusChange) onJoinStatusChange(false);
         return;
@@ -32,9 +35,17 @@ const ReferralInfo = ({ web3, account, onJoinStatusChange }) => {
         setLoading(true);
         setError('');
 
+        const networkData = TreeContract.networks[networkId];
+        if (!networkData || !networkData.address) {
+          setError('Contract not found on current network');
+          setLoading(false);
+          if (onJoinStatusChange) onJoinStatusChange(false);
+          return;
+        }
+
         const contract = new web3.eth.Contract(
           TreeContract.abi,
-          CONTRACT_ADDRESS[networkId]
+          networkData.address
         );
 
         const userInfo = await contract.methods.tree(account).call();
@@ -64,7 +75,7 @@ const ReferralInfo = ({ web3, account, onJoinStatusChange }) => {
 
         setReferralChain(chain);
       } catch (err) {
-        console.error('Error fetching referrer info:', err);
+        // Silent error handling
         setError(err.message || 'Error fetching referrer information');
         if (onJoinStatusChange) onJoinStatusChange(false);
       } finally {

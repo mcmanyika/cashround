@@ -4,7 +4,6 @@ import ReferralForm from './ReferralForm';
 import MetaMaskConnect from './MetaMaskConnect';
 import SendToReferrers from './SendToReferrers';
 import TreeContract from '../abis/Tree.json';
-import CONTRACT_ADDRESS from '../config/contractAddresses';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
@@ -66,10 +65,12 @@ class App extends Component {
 
     try {
       const networkId = await web3.eth.net.getId();
-      if (CONTRACT_ADDRESS[networkId]) {
+      const networkData = TreeContract.networks[networkId];
+      
+      if (networkData && networkData.address) {
         const contract = new web3.eth.Contract(
           TreeContract.abi,
-          CONTRACT_ADDRESS[networkId]
+          networkData.address
         );
         
         // Check if user has a referrer
@@ -92,7 +93,7 @@ class App extends Component {
         }
       }
     } catch (error) {
-      console.error('Error checking referrer status:', error);
+      // Silent error handling
       this.setState({ checkingReferrer: false });
     }
   };
@@ -148,17 +149,6 @@ class App extends Component {
           padding: '20px',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }}>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
           <Switch>
             <Route path="/send-to-referrers">
               <SendToReferrers web3={web3} account={account} />
@@ -225,10 +215,10 @@ class App extends Component {
                     margin: '0 0 12px 0',
                     lineHeight: '1.2'
                   }}>
-                    Cash Round Network
+                    Cash Round
                   </h1>
                   <p style={{
-                    fontSize: '16px',
+                    fontSize: '12px',
                     color: '#636e72',
                     lineHeight: '1.5',
                     margin: '0',
