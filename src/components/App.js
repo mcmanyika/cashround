@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom';
-import ReferralForm from './ReferralForm';
-import MetaMaskConnect from './MetaMaskConnect';
-import SendToReferrers from './SendToReferrers';
+import ReferralForm from './forms/ReferralForm';
+import MetaMaskConnect from './wallet/MetaMaskConnect';
+import SendToReferrers from './forms/SendToReferrers';
 import TreeContract from '../abis/Tree.json';
 import Layout, { 
   LayoutCard, 
@@ -13,7 +13,7 @@ import Layout, {
   LayoutTitle, 
   LayoutSubtitle,
   LayoutLoading 
-} from './Layout';
+} from './layout/Layout';
 
 class App extends Component {
   constructor(props) {

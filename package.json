@@ -1,9 +1,10 @@
 {
-  "name": "start-kit",
+  "name": "Cash Round",
   "version": "0.1.0",
   "description": "Starter Kit",
-  "author": "partsonmanyika@gmail.com",
   "dependencies": {
+    "@thirdweb-dev/react": "^4.4.0",
+    "@thirdweb-dev/sdk": "^4.0.0",
     "@truffle/hdwallet-provider": "^2.1.15",
     "babel-polyfill": "6.26.0",
     "babel-preset-env": "1.7.0",

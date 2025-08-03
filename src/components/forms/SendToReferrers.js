@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import TreeContract from '../abis/Tree.json';
+import TreeContract from '../../abis/Tree.json';
 import { toast } from 'react-toastify';
 import Layout, { 
   LayoutCard, 
@@ -10,7 +10,7 @@ import Layout, {
   LayoutLogoBadge, 
   LayoutTitle, 
   LayoutSubtitle 
-} from './Layout';
+} from '../layout/Layout';
 
 const SendToReferrers = ({ web3, account }) => {
   const history = useHistory();
