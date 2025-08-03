@@ -1,14 +1,13 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
-import logo from '../logo.png';
-import './App.css';
-import './Landing.css';
-import MetaMaskConnect from './MetaMaskConnect';
+import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom';
 import ReferralForm from './ReferralForm';
-import ReferralInfo from './ReferralInfo';
-import { ToastContainer } from 'react-toastify';
+import MetaMaskConnect from './MetaMaskConnect';
+import SendToReferrers from './SendToReferrers';
+import TreeContract from '../abis/Tree.json';
+import CONTRACT_ADDRESS from '../config/contractAddresses';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import UserDashboard from './UserDashboard';
+import { ToastContainer } from 'react-toastify';
 
 class App extends Component {
   constructor(props) {
@@ -19,7 +18,11 @@ class App extends Component {
       error: '',
       web3: null,
       hasJoined: false,
-      loading: true
+      loading: true,
+      hasReferrer: false,
+      checkingReferrer: true,
+      isMember: false,
+      copyClicked: false
     };
   }
 
@@ -43,7 +46,10 @@ class App extends Component {
               account: accounts[0],
               isConnected: true,
               web3: web3Instance
-            }, finishLoading);
+            }, () => {
+              this.checkReferrerStatus();
+              finishLoading();
+            });
           } else {
             finishLoading();
           }
@@ -54,197 +60,367 @@ class App extends Component {
     }
   }
 
+  checkReferrerStatus = async () => {
+    const { web3, account } = this.state;
+    if (!web3 || !account) return;
+
+    try {
+      const networkId = await web3.eth.net.getId();
+      if (CONTRACT_ADDRESS[networkId]) {
+        const contract = new web3.eth.Contract(
+          TreeContract.abi,
+          CONTRACT_ADDRESS[networkId]
+        );
+        
+        // Check if user has a referrer
+        const referrer = await contract.methods.getReferrer(account).call();
+        const hasReferrer = referrer !== '0x0000000000000000000000000000000000000000';
+        
+        // Check if user is already a member of the tree
+        const userData = await contract.methods.tree(account).call();
+        const isMember = userData.inviter !== '0x0000000000000000000000000000000000000000';
+        
+        this.setState({ 
+          hasReferrer,
+          isMember,
+          checkingReferrer: false
+        });
+
+        // If user has a referrer or is already a member, redirect to SendToReferrers
+        if (hasReferrer || isMember) {
+          window.location.href = '/send-to-referrers';
+        }
+      }
+    } catch (error) {
+      console.error('Error checking referrer status:', error);
+      this.setState({ checkingReferrer: false });
+    }
+  };
+
   formatAddress = (address) => {
     if (!address) return '';
     return address.slice(0, 5) + '...' + address.slice(-5);
   };
 
+  copyAddress = (address) => {
+    this.setState({ copyClicked: true });
+    navigator.clipboard.writeText(address).catch(() => {
+      // Silent fail - no toast notification
+    });
+    // Reset the color after 500ms
+    setTimeout(() => {
+      this.setState({ copyClicked: false });
+    }, 500);
+  };
+
   render() {
-    const { account, isConnected, error, web3, hasJoined, loading } = this.state;
+    const { account, isConnected, error, web3, hasJoined, loading, hasReferrer, checkingReferrer, isMember } = this.state;
+    
     if (loading) {
       return (
-        <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          <div className="spinner-border text-secondary" role="status" style={{width: '2rem', height: '2rem'}}>
-          </div>
+        <div style={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #00b894 0%, #00a085 50%, #00cec9 100%)'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid rgba(255, 255, 255, 0.3)',
+            borderTop: '4px solid white',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
         </div>
       );
     }
+
     return (
       <Router>
-        <div className="landing-page">
-          <ToastContainer position="bottom-center" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
-          <nav className="navbar navbar-dark bg-dark fixed-top shadow">
-            <div className="container d-flex align-items-center position-relative">
-              <div className="flex-grow-1 d-flex justify-content-center">
-                <Link to="/" className="navbar-brand text-center">
-                  <img src={logo} alt="TokenHub" style={{height: '32px', marginRight: '12px'}} />
-                  TOKENHUB
-                </Link>
-              </div>
-              {isConnected && (
-                <>
-                  <span className="navbar-text text-light bg-dark px-3 py-1 rounded shadow-sm d-flex align-items-center" style={{fontWeight: 500, fontFamily: 'monospace', fontSize: '0.8rem'}}>
-                    <span className="mr-2">●</span>
-                    {this.formatAddress(account)}
-                  </span>
-                  <Link to="/dashboard" className="btn btn-outline-info btn-sm ml-3">
-                    Dashboard
-                  </Link>
-                </>
-              )}
-              <MetaMaskConnect
-                account={account}
-                setAccount={this.setAccount}
-                isConnected={isConnected}
-                setIsConnected={this.setIsConnected}
-                error={error}
-                setError={this.setError}
-                web3={web3}
-                setWeb3={this.setWeb3}
-              />
-            </div>
-          </nav>
-          <div style={{height: '56px'}} />
+        <div style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #00b894 0%, #00a085 50%, #00cec9 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        }}>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
           <Switch>
-            <Route path="/dashboard">
-              <UserDashboard web3={web3} account={account} />
+            <Route path="/send-to-referrers">
+              <SendToReferrers web3={web3} account={account} />
             </Route>
             <Route path="/">
-
-            <div className="hero-image-container items-center justify-content-center d-flex" style={{
-              backgroundImage: "url('/banner.jpg')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              display: 'flex',
-              alignItems: 'flex-end'
-            }}>
-            </div>
-              
-            <div className="container">
-                <div className="hero-section w-full text-center p-4">
-                  <h1 className="hero-title">Transform Your Membership & Affiliate Programs with Blockchain</h1>
-                  <p className="hero-subtitle">TokenHub helps organizations streamline their membership management and affiliate programs using cutting-edge blockchain technology. Join us to revolutionize how you engage with your community.</p>
-                  <div className="container">
-              {isConnected && (
-                <div className="container d-flex justify-content-center align-items-center w-100 mb-4">
-                  <div className="text-center w-100" style={{maxWidth: '800px'}}>
-                      <ReferralInfo web3={web3} account={account} onJoinStatusChange={this.setHasJoined} />
-                      {!hasJoined && (
-                        <div className="mt-4">
-                          <ReferralForm web3={web3} account={account} />
-                        </div>
-                      )}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.98)',
+                borderRadius: '24px',
+                padding: '40px 30px',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                maxWidth: '400px',
+                width: '100%',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  marginBottom: '30px'
+                }}>
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 20px',
+                    boxShadow: '0 8px 20px rgba(0, 184, 148, 0.3)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      fontSize: '32px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      textAlign: 'center',
+                      lineHeight: '1'
+                    }}>
+                      CR
+                    </div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '8px',
+                      right: '8px',
+                      width: '16px',
+                      height: '16px',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '8px',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}>
+                      $
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                  <h1 style={{
+                    fontSize: '28px',
+                    fontWeight: '700',
+                    color: '#2d3436',
+                    margin: '0 0 12px 0',
+                    lineHeight: '1.2'
+                  }}>
+                    Cash Round Network
+                  </h1>
+                  <p style={{
+                    fontSize: '16px',
+                    color: '#636e72',
+                    lineHeight: '1.5',
+                    margin: '0',
+                    fontWeight: '400'
+                  }}>
+                    Connect with your referrer and start earning rewards.
+                  </p>
                 </div>
                 
-                <div className="steps-section">
-                  <div className="row text-center">
-                    <div className="col-md-4 step">
-                      <div className="step-icon mb-3">
-                        <div className="step-number">1</div>
-                        <span role="img" aria-label="link">🔗</span>
-                      </div>
-                      <h3>Connect</h3>
-                      <p>Integrate your organization with TokenHub's blockchain-powered platform and start managing memberships with unprecedented efficiency.</p>
+                {isConnected ? (
+                  <div>
+                    <div style={{
+                      background: 'rgba(0, 184, 148, 0.1)',
+                      border: '1px solid rgba(0, 184, 148, 0.2)',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      marginBottom: '20px',
+                      fontSize: '14px',
+                      color: '#00b894',
+                      fontWeight: '500'
+                    }}>
+                      Connected: {this.formatAddress(account)}
+                      <span 
+                        style={{ 
+                          cursor: 'pointer', 
+                          marginLeft: '5px', 
+                          fontSize: '14px',
+                          color: this.state.copyClicked ? '#00b894' : '#636e72',
+                          transition: 'all 0.2s ease',
+                          background: this.state.copyClicked ? '#e8f5e8' : '#f5f5f5',
+                          borderRadius: '50%',
+                          width: '28px',
+                          height: '28px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: this.state.copyClicked ? '1px solid #00b894' : '1px solid #e0e0e0'
+                        }} 
+                        onClick={() => this.copyAddress(account)}
+                      >
+                        📋
+                      </span>
                     </div>
-                    <div className="col-md-4 step">
-                      <div className="step-icon mb-3">
-                        <div className="step-number">2</div>
-                        <span role="img" aria-label="refer">🤝</span>
+                    
+                    {checkingReferrer ? (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '20px'
+                      }}>
+                        <div style={{
+                          width: '30px',
+                          height: '30px',
+                          border: '3px solid rgba(0, 184, 148, 0.3)',
+                          borderTop: '3px solid #00b894',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                          margin: '0 auto 16px'
+                        }}></div>
+                        <p style={{
+                          color: '#636e72',
+                          fontSize: '14px',
+                          margin: '0'
+                        }}>
+                          Checking your referral status...
+                        </p>
                       </div>
-                      <h3>Manage</h3>
-                      <p>Leverage our blockchain technology to track memberships, manage affiliate relationships, and automate reward distributions with complete transparency.</p>
-                    </div>
-                    <div className="col-md-4 step">
-                      <div className="step-icon mb-3">
-                        <div className="step-number">3</div>
-                        <span role="img" aria-label="invest">🌍</span>
+                    ) : hasReferrer ? (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '20px'
+                      }}>
+                        <div style={{
+                          width: '50px',
+                          height: '50px',
+                          background: 'rgba(0, 184, 148, 0.1)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto 16px'
+                        }}>
+                          <span style={{ fontSize: '24px' }}>✅</span>
+                        </div>
+                        <p style={{
+                          color: '#2d3436',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          margin: '0 0 8px 0'
+                        }}>
+                          You already have a referrer!
+                        </p>
+                        <p style={{
+                          color: '#636e72',
+                          fontSize: '14px',
+                          margin: '0 0 20px 0'
+                        }}>
+                          Redirecting you to the dashboard...
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/send-to-referrers'}
+                          style={{
+                            padding: '12px 24px',
+                            background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+                            border: 'none',
+                            borderRadius: '12px',
+                            color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          Go to Dashboard
+                        </button>
                       </div>
-                      <h3>Grow</h3>
-                      <p>Expand your community with secure, verifiable membership tracking and automated affiliate program management powered by blockchain.</p>
-                    </div>
+                    ) : isMember ? (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '20px'
+                      }}>
+                        <div style={{
+                          width: '50px',
+                          height: '50px',
+                          background: 'rgba(0, 184, 148, 0.1)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto 16px'
+                        }}>
+                          <span style={{ fontSize: '24px' }}>✅</span>
+                        </div>
+                        <p style={{
+                          color: '#2d3436',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          margin: '0 0 8px 0'
+                        }}>
+                          You are already a member!
+                        </p>
+                        <p style={{
+                          color: '#636e72',
+                          fontSize: '14px',
+                          margin: '0 0 20px 0'
+                        }}>
+                          Redirecting you to the dashboard...
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/send-to-referrers'}
+                          style={{
+                            padding: '12px 24px',
+                            background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+                            border: 'none',
+                            borderRadius: '12px',
+                            color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          Go to Dashboard
+                        </button>
+                      </div>
+                    ) : (
+                      <ReferralForm web3={web3} account={account} />
+                    )}
                   </div>
-                </div>
-                <div className="client-logos-section py-5">
-                  <div className="container">
-                    <p className="text-center text-muted mb-4">Trusted by leading organizations worldwide</p>
-                    <div className="row align-items-center justify-content-center">
-                      <div className="col-4 col-md-2 mb-4 mb-md-0">
-                        <img src="/logo.png" alt="Client 1" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
-                      </div>
-                      <div className="col-4 col-md-2 mb-4 mb-md-0">
-                        <img src="/logo.png" alt="Client 2" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
-                      </div>
-                      <div className="col-4 col-md-2 mb-4 mb-md-0">
-                        <img src="/logo.png" alt="Client 3" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
-                      </div>
-                      <div className="col-4 col-md-2 mb-4 mb-md-0">
-                        <img src="/logo.png" alt="Client 4" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
-                      </div>
-                      <div className="col-4 col-md-2 mb-4 mb-md-0">
-                        <img src="/logo.png" alt="Client 5" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
-                      </div>
-                      <div className="col-4 col-md-2 mb-4 mb-md-0">
-                        <img src="/logo.png" alt="Client 6" className="img-fluid" style={{filter: 'grayscale(100%)', opacity: 0.7}} />
-                      </div>
-                    </div>
+                ) : (
+                  <div>
+                    <p style={{
+                      color: '#636e72',
+                      marginBottom: '20px',
+                      fontSize: '16px'
+                    }}>
+                      Please connect your wallet to continue
+                    </p>
+                    <MetaMaskConnect
+                      account={account}
+                      setAccount={this.setAccount}
+                      isConnected={isConnected}
+                      setIsConnected={this.setIsConnected}
+                      error={error}
+                      setError={this.setError}
+                      web3={web3}
+                      setWeb3={this.setWeb3}
+                    />
                   </div>
-                </div>
-                <div className="faq-section mt-5 mb-5">
-                  <h2 className="faq-title text-center mb-4">Frequently Asked Questions</h2>
-                  <div className="row">
-                    <div className="col-md-6 mb-4">
-                      <div className="faq-item">
-                        <h4>What is TokenHub?</h4>
-                        <p>TokenHub is a blockchain-based platform that helps organizations manage their memberships and affiliate programs. We provide secure, transparent, and efficient solutions for tracking members, managing relationships, and automating rewards.</p>
-                      </div>
-                      <div className="faq-item">
-                        <h4>How does the platform work?</h4>
-                        <p>Our platform uses blockchain technology to create immutable records of memberships and affiliate relationships. This ensures transparency, security, and automated reward distribution while eliminating manual tracking and verification processes.</p>
-                      </div>
-                    </div>
-                    <div className="col-md-6 mb-4">
-                      <div className="faq-item">
-                        <h4>What are the benefits?</h4>
-                        <p>Organizations benefit from reduced administrative overhead, increased transparency, and automated reward distribution. Members and affiliates enjoy secure verification of their status and instant access to their rewards.</p>
-                      </div>
-                      <div className="faq-item">
-                        <h4>Who can use TokenHub?</h4>
-                        <p>Any organization looking to modernize their membership management or affiliate program can benefit from our platform. We serve businesses, associations, and communities of all sizes.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bottom-banner d-flex align-items-center justify-content-center">
-                  <div className="banner-content container d-flex align-items-center py-4">
-                    <div className="banner-logo pr-4 text-center">
-                      <img src={logo} alt="TokenHub logo" style={{width: '90px'}} />
-                    </div>
-                    <div className="banner-divider mx-4" />
-                    <div className="banner-text flex-grow-1">
-                      <h2 className="mb-3 text-muted">Transform Your Membership Management with Blockchain Technology.</h2>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </Route>
           </Switch>
-          {/* Footer */}
-          <footer className="footer-section text-center mt-4 py-3">
-            <div className="footer-links mb-2">
-              <a href="javascript:void(0)">Operating agreement</a> &nbsp; | &nbsp;
-              <a href="javascript:void(0)">Program policies</a> &nbsp; | &nbsp;
-              <a href="javascript:void(0)">Conditions of use</a> &nbsp; | &nbsp;
-              <a href="javascript:void(0)">Contact us</a>
-            </div>
-            <div className="footer-copyright">
-              © {new Date().getFullYear()} TokenHub. Revolutionizing Membership Management.
-            </div>
-          </footer>
         </div>
       </Router>
     );
