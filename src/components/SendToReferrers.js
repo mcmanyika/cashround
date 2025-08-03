@@ -2,7 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import TreeContract from '../abis/Tree.json';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import Layout, { 
+  LayoutCard, 
+  LayoutHeader,
+  LayoutLogo, 
+  LayoutLogoText, 
+  LayoutLogoBadge, 
+  LayoutTitle, 
+  LayoutSubtitle 
+} from './Layout';
 
 const SendToReferrers = ({ web3, account }) => {
   const history = useHistory();
@@ -257,87 +265,16 @@ const SendToReferrers = ({ web3, account }) => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.98)',
-        borderRadius: '24px',
-        padding: '40px 30px',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        maxWidth: '500px',
-        width: '100%',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          marginBottom: '30px'
-        }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px',
-            boxShadow: '0 8px 20px rgba(0, 184, 148, 0.3)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              fontSize: '32px',
-              fontWeight: 'bold',
-              color: 'white',
-              textAlign: 'center',
-              lineHeight: '1'
-            }}>
-              CR
-            </div>
-            <div style={{
-              position: 'absolute',
-              bottom: '8px',
-              right: '8px',
-              width: '16px',
-              height: '16px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '8px',
-              color: 'white',
-              fontWeight: 'bold'
-            }}>
-              $
-            </div>
-          </div>
-          <h1 style={{
-            fontSize: '28px',
-            fontWeight: '700',
-            color: '#2d3436',
-            margin: '0 0 12px 0',
-            lineHeight: '1.2'
-          }}>
-            Cash Round
-          </h1>
-          <p style={{
-            fontSize: '16px',
-            color: '#636e72',
-            lineHeight: '1.5',
-            margin: '0',
-            fontWeight: '400'
-          }}>
-            Confirm your payment.
-          </p>
-        </div>
+    <>
+      <LayoutCard style={{ maxWidth: '500px' }}>
+        <LayoutHeader>
+          <LayoutLogo>
+            <LayoutLogoText>CR</LayoutLogoText>
+            <LayoutLogoBadge>$</LayoutLogoBadge>
+          </LayoutLogo>
+          <LayoutTitle>Cash Round</LayoutTitle>
+          <LayoutSubtitle>Confirm your payment.</LayoutSubtitle>
+        </LayoutHeader>
 
         {account && (
           <div style={{
@@ -629,8 +566,8 @@ const SendToReferrers = ({ web3, account }) => {
             {error}
           </p>
         )}
-      </div>
-    </div>
+      </LayoutCard>
+    </>
   );
 };
 

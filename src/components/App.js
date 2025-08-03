@@ -4,9 +4,16 @@ import ReferralForm from './ReferralForm';
 import MetaMaskConnect from './MetaMaskConnect';
 import SendToReferrers from './SendToReferrers';
 import TreeContract from '../abis/Tree.json';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
+import Layout, { 
+  LayoutCard, 
+  LayoutHeader,
+  LayoutLogo, 
+  LayoutLogoText, 
+  LayoutLogoBadge, 
+  LayoutTitle, 
+  LayoutSubtitle,
+  LayoutLoading 
+} from './Layout';
 
 class App extends Component {
   constructor(props) {
@@ -67,6 +74,19 @@ class App extends Component {
       const networkId = await web3.eth.net.getId();
       const networkData = TreeContract.networks[networkId];
       
+      // Network name mapping for better UX
+      const networkNames = {
+        1: 'Ethereum Mainnet',
+        5: 'Goerli Testnet',
+        11155111: 'Sepolia Testnet',
+        137: 'Polygon Mainnet',
+        80001: 'Mumbai Testnet',
+        5777: 'Local Ganache'
+      };
+      
+      const currentNetworkName = networkNames[networkId] || `Network ${networkId}`;
+      console.log(`Connected to: ${currentNetworkName}`);
+      
       if (networkData && networkData.address) {
         const contract = new web3.eth.Contract(
           TreeContract.abi,
@@ -91,6 +111,10 @@ class App extends Component {
         if (hasReferrer || isMember) {
           window.location.href = '/send-to-referrers';
         }
+      } else {
+        // Show network info for debugging
+        console.log(`No contract found on ${currentNetworkName}. Available networks:`, Object.keys(TreeContract.networks));
+        this.setState({ checkingReferrer: false });
       }
     } catch (error) {
       // Silent error handling
@@ -118,115 +142,26 @@ class App extends Component {
     const { account, isConnected, error, web3, hasJoined, loading, hasReferrer, checkingReferrer, isMember } = this.state;
     
     if (loading) {
-      return (
-        <div style={{
-          height: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, #00b894 0%, #00a085 50%, #00cec9 100%)'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid rgba(255, 255, 255, 0.3)',
-            borderTop: '4px solid white',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-        </div>
-      );
+      return <LayoutLoading />;
     }
 
     return (
       <Router>
-        <div style={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #00b894 0%, #00a085 50%, #00cec9 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        }}>
+        <Layout>
           <Switch>
             <Route path="/send-to-referrers">
               <SendToReferrers web3={web3} account={account} />
             </Route>
             <Route path="/">
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.98)',
-                borderRadius: '24px',
-                padding: '40px 30px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                maxWidth: '400px',
-                width: '100%',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  marginBottom: '30px'
-                }}>
-                  <div style={{
-                    width: '80px',
-                    height: '80px',
-                    background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 20px',
-                    boxShadow: '0 8px 20px rgba(0, 184, 148, 0.3)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      fontSize: '32px',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      textAlign: 'center',
-                      lineHeight: '1'
-                    }}>
-                      CR
-                    </div>
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '8px',
-                      right: '8px',
-                      width: '16px',
-                      height: '16px',
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '8px',
-                      color: 'white',
-                      fontWeight: 'bold'
-                    }}>
-                      $
-                    </div>
-                  </div>
-                  <h1 style={{
-                    fontSize: '28px',
-                    fontWeight: '700',
-                    color: '#2d3436',
-                    margin: '0 0 12px 0',
-                    lineHeight: '1.2'
-                  }}>
-                    Cash Round
-                  </h1>
-                  <p style={{
-                    fontSize: '12px',
-                    color: '#636e72',
-                    lineHeight: '1.5',
-                    margin: '0',
-                    fontWeight: '400'
-                  }}>
-                    Connect with your referrer and start earning rewards.
-                  </p>
-                </div>
+              <LayoutCard>
+                <LayoutHeader>
+                  <LayoutLogo>
+                    <LayoutLogoText>CR</LayoutLogoText>
+                    <LayoutLogoBadge>$</LayoutLogoBadge>
+                  </LayoutLogo>
+                  <LayoutTitle>Cash Round</LayoutTitle>
+                  <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
+                </LayoutHeader>
                 
                 {isConnected ? (
                   <div>
@@ -408,10 +343,10 @@ class App extends Component {
                     />
                   </div>
                 )}
-              </div>
+              </LayoutCard>
             </Route>
           </Switch>
-        </div>
+        </Layout>
       </Router>
     );
   }
