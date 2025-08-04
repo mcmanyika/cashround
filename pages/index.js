@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import ReferralForm from '../src/components/forms/ReferralForm';
-import MetaMaskConnect from '../src/components/wallet/MetaMaskConnect';
 import TreeContract from '../src/abis/Tree.json';
 import { ConnectEmbed } from "thirdweb/react";
 import { client } from '../src/client';
@@ -304,19 +303,14 @@ export default function Home() {
             height: '50vh'
           }}>
            
-            <ConnectEmbed client={client}
+            <ConnectEmbed 
+              client={client}
               theme="light"
-              />
-            {/* <MetaMaskConnect
-              account={account}
-              setAccount={setAccount}
-              isConnected={isConnected}
-              setIsConnected={setIsConnected}
-              error={error}
-              setError={setError}
-              web3={web3}
-              setWeb3={setWeb3}
-            /> */}
+              onConnect={() => {
+                // Refresh the page when successfully connected
+                window.location.reload();
+              }}
+            />
           </div>
         )}
       </LayoutCard>
