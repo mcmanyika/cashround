@@ -15,8 +15,6 @@ import Layout, {
   LayoutSubtitle,
   LayoutLoading 
 } from './layout/Layout';
-import { ConnectButton } from '@thirdweb-dev/react';
-import { client } from '../thirdwebClient';
 
 
 function App() {
@@ -145,7 +143,6 @@ function App() {
                 </LayoutLogo>
                 <LayoutTitle>Cash Round</LayoutTitle>
                 <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
-                <ConnectButton client={client} />
               </LayoutHeader>
               
               {isConnected ? (
