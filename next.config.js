@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: false,
+  distDir: 'build',
   experimental: {
     forceSwcTransforms: false,
   },
