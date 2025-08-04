@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import ReferralForm from '../src/components/forms/ReferralForm';
 import MetaMaskConnect from '../src/components/wallet/MetaMaskConnect';
 import TreeContract from '../src/abis/Tree.json';
-import { ConnectButton } from "thirdweb/react";
+import { ConnectEmbed } from "thirdweb/react";
 import { client } from '../src/client';
 import Layout, { 
   LayoutCard, 
@@ -297,9 +297,14 @@ export default function Home() {
             )}
           </div>
         ) : (
-          <div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '50vh'
+          }}>
            
-            <ConnectButton client={client}
+            <ConnectEmbed client={client}
               theme="light"
               />
             {/* <MetaMaskConnect
