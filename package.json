@@ -10,6 +10,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@thirdweb-dev/auth": "^4.1.97",
+    "@thirdweb-dev/chains": "^0.1.120",
+    "@thirdweb-dev/react": "^4.9.4",
+    "@thirdweb-dev/sdk": "^4.0.99",
     "assert": "^2.1.0",
     "browserify-zlib": "^0.2.0",
     "crypto-browserify": "^3.12.1",

@@ -62,9 +62,6 @@ export default function Home() {
       
       // Network name mapping for better UX
       const networkNames = {
-        1: 'Ethereum Mainnet',
-        5: 'Goerli Testnet',
-        11155111: 'Sepolia Testnet',
         137: 'Polygon Mainnet',
         80001: 'Mumbai Testnet',
         5777: 'Local Ganache'
