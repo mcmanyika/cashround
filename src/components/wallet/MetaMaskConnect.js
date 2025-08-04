@@ -1,12 +1,37 @@
 import React from 'react';
+import Web3 from 'web3';
 
 const MetaMaskConnect = ({ account, setAccount, isConnected, setIsConnected, error, setError, web3, setWeb3 }) => {
   const connectWallet = async () => {
     try {
       if (window.ethereum) {
+        // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const Web3 = require('web3');
+        
+        if (accounts.length === 0) {
+          setError('No accounts found. Please unlock MetaMask.');
+          return;
+        }
+        
+        // Create Web3 instance
         const web3Instance = new Web3(window.ethereum);
+        
+        // Set up event listeners for account changes
+        window.ethereum.on('accountsChanged', (accounts) => {
+          if (accounts.length === 0) {
+            setAccount('');
+            setIsConnected(false);
+            setWeb3(null);
+          } else {
+            setAccount(accounts[0]);
+          }
+        });
+        
+        // Set up network change listener
+        window.ethereum.on('chainChanged', () => {
+          window.location.reload();
+        });
+        
         setWeb3(web3Instance);
         setAccount(accounts[0]);
         setIsConnected(true);
@@ -16,8 +41,14 @@ const MetaMaskConnect = ({ account, setAccount, isConnected, setIsConnected, err
         setError('Please install MetaMask to use this feature');
       }
     } catch (error) {
-      setError('Error connecting to MetaMask');
-      console.error(error);
+      console.error('MetaMask connection error:', error);
+      if (error.code === 4001) {
+        setError('User rejected the connection request');
+      } else if (error.code === -32002) {
+        setError('Please check MetaMask and try again');
+      } else {
+        setError('Error connecting to MetaMask: ' + error.message);
+      }
     }
   };
 
@@ -32,15 +63,41 @@ const MetaMaskConnect = ({ account, setAccount, isConnected, setIsConnected, err
   return (
     <div className="metamask-connect">
       {!isConnected ? (
-        <button className="btn btn-outline-secondary btn-sm ml-2" onClick={connectWallet}>
+        <button 
+          style={{
+            padding: '8px 16px',
+            background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+            border: 'none',
+            borderRadius: '8px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onClick={connectWallet}
+        >
           Sign in
         </button>
       ) : (
-        <button className="btn btn-outline-secondary btn-sm ml-2" onClick={logout}>
+        <button 
+          style={{
+            padding: '8px 16px',
+            background: '#636e72',
+            border: 'none',
+            borderRadius: '8px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onClick={logout}
+        >
           Logout
         </button>
       )}
-      {error && <p className="text-danger">{error}</p>}
+      {error && <p style={{ color: '#e74c3c', fontSize: '14px', marginTop: '8px' }}>{error}</p>}
     </div>
   );
 };

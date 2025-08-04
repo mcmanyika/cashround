@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import Web3 from 'web3';
 import ReferralForm from './forms/ReferralForm';
 import MetaMaskConnect from './wallet/MetaMaskConnect';
 import SendToReferrers from './forms/SendToReferrers';
@@ -46,7 +47,6 @@ class App extends Component {
       window.ethereum.request({ method: 'eth_accounts' })
         .then(accounts => {
           if (accounts.length > 0) {
-            const Web3 = require('web3');
             const web3Instance = new Web3(window.ethereum);
             this.setState({
               account: accounts[0],
@@ -164,16 +164,18 @@ class App extends Component {
                 </LayoutHeader>
                 
                 {isConnected ? (
-                  <div>
+                  <div style={{ width: '100%' }}>
                     <div style={{
                       background: 'rgba(0, 184, 148, 0.1)',
                       border: '1px solid rgba(0, 184, 148, 0.2)',
                       borderRadius: '12px',
                       padding: '12px',
-                      marginBottom: '20px',
+                      marginBottom: '24px',
                       fontSize: '14px',
                       color: '#00b894',
-                      fontWeight: '500'
+                      fontWeight: '500',
+                      width: '100%',
+                      boxSizing: 'border-box'
                     }}>
                       Connected: {this.formatAddress(account)}
                       <span 

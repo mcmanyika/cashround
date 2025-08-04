@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import TreeContract from '../abis/Tree.json';
-import './ReferralInfo.css';
 import SendToReferrers from './SendToReferrers';
 
 const ReferralInfo = ({ web3, account, onJoinStatusChange }) => {

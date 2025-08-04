@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import TreeContract from '../abis/Tree.json';
-import './UserDashboard.css';
 
 const UserDashboard = ({ web3, account }) => {
   const [networkId, setNetworkId] = useState(null);

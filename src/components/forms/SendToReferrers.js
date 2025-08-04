@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { toast } from 'react-toastify';
 import Layout, { 
@@ -13,7 +13,7 @@ import Layout, {
 } from '../layout/Layout';
 
 const SendToReferrers = ({ web3, account }) => {
-  const history = useHistory();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [networkId, setNetworkId] = useState(null);
@@ -23,6 +23,7 @@ const SendToReferrers = ({ web3, account }) => {
   const [referralChain, setReferralChain] = useState([]);
   const [isMember, setIsMember] = useState(false);
   const [copyClicked, setCopyClicked] = useState(false);
+  const [debugInfo, setDebugInfo] = useState('');
 
   const copyAddress = (address) => {
     setCopyClicked(true);
@@ -49,9 +50,14 @@ const SendToReferrers = ({ web3, account }) => {
               networkData.address
             );
             setContract(contractInstance);
+            console.log('Contract initialized at:', networkData.address);
+          } else {
+            console.error('No contract found on network:', networkId);
+            setError(`No contract found on network ${networkId}`);
           }
         } catch (error) {
-          // Silent error handling
+          console.error('Error initializing contract:', error);
+          setError('Error connecting to blockchain');
         }
       }
     };
@@ -63,6 +69,7 @@ const SendToReferrers = ({ web3, account }) => {
       if (contract && account) {
         try {
           console.log('Fetching data for account:', account);
+          setDebugInfo(`Fetching data for: ${account}`);
           
           // Check if user has paid
           const paid = await contract.methods.hasPaidUpliners(account).call();
@@ -72,7 +79,7 @@ const SendToReferrers = ({ web3, account }) => {
           // If user has already paid, redirect to home page
           if (paid) {
             setTimeout(() => {
-              history.push('/');
+              router.push('/');
             }, 2000); // Wait 2 seconds to show the success message
             return;
           }
@@ -84,10 +91,13 @@ const SendToReferrers = ({ web3, account }) => {
             console.log('User inviter:', userData.inviter);
             console.log('User self:', userData.self);
             
+            setDebugInfo(`User inviter: ${userData.inviter}, User self: ${userData.self}`);
+            
             // If user has an inviter, they are in the tree
             if (userData.inviter !== '0x0000000000000000000000000000000000000000') {
               setIsMember(true);
               console.log('User is a member, building referral chain...');
+              setDebugInfo('User is a member, building referral chain...');
               
               // Start with the direct referrer
               const directReferrer = userData.inviter;
@@ -127,25 +137,31 @@ const SendToReferrers = ({ web3, account }) => {
               
               console.log('Final referral chain (max 5 levels):', referralChain);
               setReferralChain(referralChain);
+              setDebugInfo(`Found ${referralChain.length} referrers in chain`);
             } else {
               console.log('User is not a member');
               setIsMember(false);
               setReferralChain([]);
+              setDebugInfo('User is not a member of the tree');
             }
           } catch (treeError) {
             console.log('Error checking tree data:', treeError);
             setReferralChain([]);
+            setIsMember(false);
+            setDebugInfo(`Error checking tree data: ${treeError.message}`);
           }
         } catch (e) {
           console.error('Error fetching data:', e);
           setHasPaid(false);
           setReferralChain([]);
+          setIsMember(false);
           setError('Error fetching data from blockchain: ' + e.message);
+          setDebugInfo(`Error fetching data: ${e.message}`);
         }
       }
     };
     fetchData();
-  }, [contract, account, history]);
+  }, [contract, account, router]);
 
   const handleSendToReferrers = async () => {
     if (!web3 || !account || !networkId) {
@@ -243,7 +259,7 @@ const SendToReferrers = ({ web3, account }) => {
       
       // Redirect to home page after successful membership
       setTimeout(() => {
-        history.push('/');
+        router.push('/');
       }, 2000); // Wait 2 seconds to show the success message
     } catch (err) {
       if (err.code === 4001) {
@@ -414,6 +430,25 @@ const SendToReferrers = ({ web3, account }) => {
                 fontWeight: '600',
                 margin: '0 0 8px 0'
               }}>
+                Your Referral Chain ({referralChain.length} referrers):
+              </p>
+              {referralChain.map((referrer, index) => (
+                <p key={index} style={{
+                  color: '#636e72',
+                  fontSize: '14px',
+                  margin: '0 0 4px 0',
+                  fontFamily: 'monospace'
+                }}>
+                  {index + 1}. {referrer.slice(0, 6)}...{referrer.slice(-4)}
+                </p>
+              ))}
+              <hr style={{ margin: '12px 0', border: 'none', borderTop: '1px solid rgba(0, 184, 148, 0.2)' }} />
+              <p style={{
+                color: '#2d3436',
+                fontSize: '14px',
+                fontWeight: '600',
+                margin: '8px 0 0 0'
+              }}>
                 Payment Summary:
               </p>
               <p style={{
@@ -421,6 +456,8 @@ const SendToReferrers = ({ web3, account }) => {
                 fontSize: '14px',
                 margin: '0'
               }}>
+                • Amount per referrer: {ethAmountPerMember} ETH
+                <br />
                 • Total: {ethAmountPerMember * referralChain.length} ETH
               </p>
             </div>
@@ -455,7 +492,7 @@ const SendToReferrers = ({ web3, account }) => {
               )}
             </button>
 
-            {hasPaid && (
+            {!isMember && (
               <button
                 onClick={handleBecomeMember}
                 disabled={loading}
@@ -511,14 +548,17 @@ const SendToReferrers = ({ web3, account }) => {
                 fontWeight: '600',
                 margin: '0 0 8px 0'
               }}>
-                No referrers found
+                {isMember && referralChain.length === 0 ? 'No referrers in your chain' : 'Not a member yet'}
               </p>
               <p style={{
                 color: '#636e72',
                 fontSize: '14px',
                 margin: '0'
               }}>
-                You don't have any referrers in your chain yet.
+                {isMember && referralChain.length === 0 
+                  ? 'You are a member but have no referrers in your chain. This might be because you joined directly or your referrers are not in the system.'
+                  : 'You need to become a member first to access the referral system.'
+                }
               </p>
             </div>
 

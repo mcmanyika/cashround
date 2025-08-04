@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const ReferralForm = ({ web3, account }) => {
-  const history = useHistory();
+  const router = useRouter();
   const [referrerAddress, setReferrerAddress] = useState('');
   const [ethAmount, setEthAmount] = useState('5');
   const [loading, setLoading] = useState(false);
@@ -56,10 +55,10 @@ const ReferralForm = ({ web3, account }) => {
             const hasPaid = await contract.methods.hasPaidUpliners(account).call();
             setHasPaidReferrers(hasPaid);
             if (hasPaid) {
-              // If user has already paid, redirect to home page
-              setTimeout(() => {
-                history.push('/');
-              }, 2000);
+                          // If user has already paid, redirect to home page
+            setTimeout(() => {
+              router.push('/');
+            }, 2000);
             }
           }
           
@@ -73,7 +72,7 @@ const ReferralForm = ({ web3, account }) => {
       }
     };
     checkMembership();
-  }, [contract, account, history]);
+  }, [contract, account, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,7 +109,7 @@ const ReferralForm = ({ web3, account }) => {
       
       // Redirect to SendToReferrers component after successful submission
       setTimeout(() => {
-        history.push('/send-to-referrers');
+        router.push('/send-to-referrers');
       }, 2000); // Wait 2 seconds to show the success message
       
     } catch (err) {
@@ -182,7 +181,7 @@ const ReferralForm = ({ web3, account }) => {
         {!hasPaidReferrers && (
           <>
           <button
-            onClick={() => history.push('/send-to-referrers')}
+            onClick={() => router.push('/send-to-referrers')}
             style={{
               padding: '12px 24px',
               background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
@@ -205,7 +204,8 @@ const ReferralForm = ({ web3, account }) => {
 
   return (
     <div style={{
-      width: '100%'
+      width: '100%',
+      minHeight: 'fit-content'
     }}>
       <ToastContainer
         position="top-right"
@@ -232,8 +232,11 @@ const ReferralForm = ({ web3, account }) => {
           Please connect to a supported network. Current network ID: {networkId}
         </div>
       )}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '24px' }}>
+      <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+        <div style={{ 
+          marginBottom: '24px',
+          width: '100%'
+        }}>
           <label style={{
             display: 'block',
             fontSize: '14px',
@@ -257,7 +260,8 @@ const ReferralForm = ({ web3, account }) => {
               transition: 'all 0.2s ease',
               backgroundColor: 'transparent',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              boxSizing: 'border-box'
             }}
             value={referrerAddress}
             onChange={(e) => setReferrerAddress(e.target.value)}
