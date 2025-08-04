@@ -135,9 +135,6 @@ export default function Home() {
           </LayoutLogo>
           <LayoutTitle>Cash Round</LayoutTitle>
           <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
-          <ConnectButton client={client}
-          theme="light"
-          />
         </LayoutHeader>
         
         {isConnected ? (
@@ -301,14 +298,11 @@ export default function Home() {
           </div>
         ) : (
           <div>
-            <p style={{
-              color: '#636e72',
-              marginBottom: '20px',
-              fontSize: '16px'
-            }}>
-              Please connect your wallet to continue
-            </p>
-            <MetaMaskConnect
+           
+            <ConnectButton client={client}
+              theme="light"
+              />
+            {/* <MetaMaskConnect
               account={account}
               setAccount={setAccount}
               isConnected={isConnected}
@@ -317,7 +311,7 @@ export default function Home() {
               setError={setError}
               web3={web3}
               setWeb3={setWeb3}
-            />
+            /> */}
           </div>
         )}
       </LayoutCard>
