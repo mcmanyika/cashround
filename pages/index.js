@@ -307,8 +307,8 @@ export default function Home() {
               client={client}
               theme="light"
               onConnect={() => {
-                // Refresh the page when successfully connected
-                window.location.reload();
+                // Redirect to home page when successfully connected
+                router.push('/');
               }}
             />
           </div>
