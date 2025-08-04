@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import ReferralForm from '../src/components/forms/ReferralForm';
 import MetaMaskConnect from '../src/components/wallet/MetaMaskConnect';
 import TreeContract from '../src/abis/Tree.json';
+import { ConnectButton } from "thirdweb/react";
+import { client } from '../src/client';
 import Layout, { 
   LayoutCard, 
   LayoutHeader,
@@ -133,6 +135,9 @@ export default function Home() {
           </LayoutLogo>
           <LayoutTitle>Cash Round</LayoutTitle>
           <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
+          <ConnectButton client={client}
+          theme="light"
+          />
         </LayoutHeader>
         
         {isConnected ? (

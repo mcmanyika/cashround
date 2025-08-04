@@ -138,7 +138,7 @@ function App() {
                   <LayoutLogoText>CR</LayoutLogoText>
                   <LayoutLogoBadge>$</LayoutLogoBadge>
                 </LayoutLogo>
-                <LayoutTitle>Cash Round</LayoutTitle>
+                <LayoutTitle>Cash Rounds</LayoutTitle>
                 <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
               </LayoutHeader>
               
