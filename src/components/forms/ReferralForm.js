@@ -18,6 +18,7 @@ const ReferralForm = ({ web3, account }) => {
   const [isMember, setIsMember] = useState(false);
   const [checkingMembership, setCheckingMembership] = useState(true);
   const [hasPaidReferrers, setHasPaidReferrers] = useState(false);
+  const [referralChain, setReferralChain] = useState([]);
 
   // Get network ID and initialize contract when component mounts or web3 changes
   useEffect(() => {
@@ -52,15 +53,50 @@ const ReferralForm = ({ web3, account }) => {
           const member = userData.inviter !== '0x0000000000000000000000000000000000000000';
           setIsMember(member);
           
-          // Also check if user has already paid their referrers
+          // Also check if user has already paid their referrers and build referral chain
           if (member) {
             const hasPaid = await contract.methods.hasPaidUpliners(account).call();
             setHasPaidReferrers(hasPaid);
+            
+            // Build referral chain
+            const referralChain = [];
+            const directReferrer = userData.inviter;
+            
+            // Add direct referrer first
+            if (directReferrer !== '0x0000000000000000000000000000000000000000') {
+              referralChain.push(directReferrer);
+            }
+            
+            // Traverse up the tree (max 5 levels total)
+            let currentAddress = directReferrer;
+            let maxIterations = 4; // 1 direct + 4 more = 5 total
+            let iteration = 0;
+            
+            while (currentAddress !== '0x0000000000000000000000000000000000000000' && 
+                   iteration < maxIterations && 
+                   referralChain.length < 5) {
+              try {
+                const currentUserData = await contract.methods.tree(currentAddress).call();
+                if (currentUserData.inviter !== '0x0000000000000000000000000000000000000000') {
+                  referralChain.push(currentUserData.inviter);
+                  currentAddress = currentUserData.inviter;
+                } else {
+                  break; // Reached the top of the tree
+                }
+              } catch (error) {
+                console.error('Error traversing referral chain:', error);
+                break;
+              }
+              iteration++;
+            }
+            
+            setReferralChain(referralChain);
+            
             if (hasPaid) {
-                          // If user has already paid, redirect to home page
-            setTimeout(() => {
-              // router.push('/');
-            }, 2000);
+              // If user has already paid, redirect to home page
+              setTimeout(() => {
+                // router.push('/');
+              }, 2000);
             }
           }
           
@@ -185,6 +221,36 @@ const ReferralForm = ({ web3, account }) => {
           </div>
         )}
         
+        {/* Referral Chain Display */}
+        {referralChain.length > 0 && (
+          <div style={{
+            background: '#f8f9fa',
+            border: '1px solid #dee2e6',
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <p style={{
+              color: '#2d3436',
+              fontSize: '14px',
+              fontWeight: '600',
+              margin: '0 0 8px 0'
+            }}>
+              Your Referral Chain ({referralChain.length} referrers):
+            </p>
+            {referralChain.map((referrer, index) => (
+              <p key={index} style={{
+                color: '#636e72',
+                fontSize: '14px',
+                margin: '0 0 4px 0',
+                fontFamily: 'monospace'
+              }}>
+                {index + 1}. {referrer.slice(0, 6)}...{referrer.slice(-4)}
+              </p>
+            ))}
+          </div>
+        )}
+        
         <div style={{
           textAlign: 'center',
           padding: '20px'
@@ -216,6 +282,7 @@ const ReferralForm = ({ web3, account }) => {
           }}>
             {hasPaidReferrers ? '' : 'Click below to complete your membership'}
           </p>
+          
           {!hasPaidReferrers && (
             <>
             <button
