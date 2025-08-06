@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import SendToReferrers from '../src/components/forms/SendToReferrers';
+import ReferralForm from '../src/components/forms/ReferralForm';
 import { useActiveWallet, useActiveAccount } from "thirdweb/react";
-import { LayoutLoading } from '../src/components/layout/Layout';
+import { LayoutWithHeader, LayoutLoading } from '../src/components/layout/Layout';
 
-export default function SendToReferrersPage() {
+export default function ReferralPage() {
   const router = useRouter();
   const activeAccount = useActiveAccount();
   const activeWallet = useActiveWallet();
@@ -17,7 +17,7 @@ export default function SendToReferrersPage() {
   // Sync thirdweb connection state with local state
   useEffect(() => {
     if (activeAccount?.address && activeWallet) {
-      console.log('Thirdweb wallet connected in SendToReferrers page:', activeAccount.address);
+      console.log('Thirdweb wallet connected:', activeAccount.address);
       setAccount(activeAccount.address);
       setIsConnected(true);
       
@@ -29,7 +29,7 @@ export default function SendToReferrersPage() {
       }
       setLoading(false);
     } else {
-      console.log('Thirdweb wallet disconnected in SendToReferrers page');
+      console.log('Thirdweb wallet disconnected');
       // Redirect to home if not connected
       router.push('/');
     }
@@ -43,5 +43,9 @@ export default function SendToReferrersPage() {
     return <LayoutLoading />;
   }
 
-  return <SendToReferrers web3={web3} account={account} />;
-} 
+  return (
+    <LayoutWithHeader showSignout={true}>
+      <ReferralForm web3={web3} account={account} />
+    </LayoutWithHeader>
+  );
+}

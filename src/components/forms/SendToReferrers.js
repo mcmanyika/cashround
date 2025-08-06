@@ -2,15 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { toast } from 'react-toastify';
-import Layout, { 
-  LayoutCard, 
-  LayoutHeader,
-  LayoutLogo, 
-  LayoutLogoText, 
-  LayoutLogoBadge, 
-  LayoutTitle, 
-  LayoutSubtitle 
-} from '../layout/Layout';
+import { LayoutWithHeader } from '../layout/Layout';
 
 const SendToReferrers = ({ web3, account }) => {
   const router = useRouter();
@@ -23,7 +15,15 @@ const SendToReferrers = ({ web3, account }) => {
   const [referralChain, setReferralChain] = useState([]);
   const [isMember, setIsMember] = useState(false);
   const [copyClicked, setCopyClicked] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('');
+  const [debugInfo, setDebugInfo] = useState('Component initialized');
+
+  // Log props on component mount/update
+  useEffect(() => {
+    console.log('=== SendToReferrers Props ===');
+    console.log('web3:', web3);
+    console.log('account:', account);
+    setDebugInfo(`Props - Web3: ${web3 ? 'Yes' : 'No'}, Account: ${account ? 'Yes' : 'No'}`);
+  }, [web3, account]);
 
   const copyAddress = (address) => {
     setCopyClicked(true);
@@ -68,12 +68,15 @@ const SendToReferrers = ({ web3, account }) => {
     const fetchData = async () => {
       if (contract && account) {
         try {
-          console.log('Fetching data for account:', account);
+          console.log('=== DEBUGGING SendToReferrers ===');
+          console.log('Contract address:', contract.options.address);
+          console.log('Account:', account);
+          console.log('Network ID:', networkId);
           setDebugInfo(`Fetching data for: ${account}`);
           
           // Check if user has paid
           const paid = await contract.methods.hasPaidUpliners(account).call();
-          console.log('Has paid:', paid);
+          console.log('Has paid upliners:', paid);
           setHasPaid(paid);
           
           // If user has already paid, redirect to home page
@@ -87,14 +90,17 @@ const SendToReferrers = ({ web3, account }) => {
           // Check if user exists in the tree and build referral chain
           try {
             const userData = await contract.methods.tree(account).call();
-            console.log('User data:', userData);
+            console.log('=== TREE DATA ===');
+            console.log('Raw user data from contract:', userData);
             console.log('User inviter:', userData.inviter);
             console.log('User self:', userData.self);
+            console.log('Is inviter zero address?', userData.inviter === '0x0000000000000000000000000000000000000000');
+            console.log('Inviter length:', userData.inviter?.length);
             
             setDebugInfo(`User inviter: ${userData.inviter}, User self: ${userData.self}`);
             
             // If user has an inviter, they are in the tree
-            if (userData.inviter !== '0x0000000000000000000000000000000000000000') {
+            if (userData.inviter && userData.inviter !== '0x0000000000000000000000000000000000000000') {
               setIsMember(true);
               console.log('User is a member, building referral chain...');
               setDebugInfo('User is a member, building referral chain...');
@@ -161,7 +167,7 @@ const SendToReferrers = ({ web3, account }) => {
       }
     };
     fetchData();
-  }, [contract, account, router]);
+  }, [contract, account, router, networkId]);
 
   const handleSendToReferrers = async () => {
     if (!web3 || !account || !networkId) {
@@ -281,16 +287,28 @@ const SendToReferrers = ({ web3, account }) => {
   };
 
   return (
-    <>
-      <LayoutCard style={{ maxWidth: '500px' }}>
-        <LayoutHeader>
-          <LayoutLogo>
-            <LayoutLogoText>CR</LayoutLogoText>
-            <LayoutLogoBadge>$</LayoutLogoBadge>
-          </LayoutLogo>
-          <LayoutTitle>Cash Round</LayoutTitle>
-          <LayoutSubtitle>Confirm your payment.</LayoutSubtitle>
-        </LayoutHeader>
+    <LayoutWithHeader showSignout={true}>
+      <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+        
+        {/* Debug Information - Always Visible */}
+        <div style={{
+          background: '#f8f9fa',
+          border: '1px solid #dee2e6',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '16px',
+          fontSize: '12px',
+          color: '#495057'
+        }}>
+          <strong>Debug Info:</strong> {debugInfo || 'Initializing...'}<br/>
+          <strong>Is Member:</strong> {isMember.toString()}<br/>
+          <strong>Has Paid:</strong> {hasPaid.toString()}<br/>
+          <strong>Referral Chain Length:</strong> {referralChain.length}<br/>
+          <strong>Network ID:</strong> {networkId || 'Not set'}<br/>
+          <strong>Contract:</strong> {contract ? 'Loaded' : 'Not loaded'}<br/>
+          <strong>Account:</strong> {account ? `${account.slice(0,6)}...${account.slice(-4)}` : 'Not set'}<br/>
+          <strong>Web3:</strong> {web3 ? 'Loaded' : 'Not loaded'}
+        </div>
 
         {account && (
           <div style={{
@@ -606,8 +624,8 @@ const SendToReferrers = ({ web3, account }) => {
             {error}
           </p>
         )}
-      </LayoutCard>
-    </>
+      </div>
+    </LayoutWithHeader>
   );
 };
 

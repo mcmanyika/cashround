@@ -1,4 +1,5 @@
 import React from 'react';
+import { useActiveWallet, useActiveAccount, ConnectButton } from 'thirdweb/react';
 
 const Layout = ({ 
   children, 
@@ -60,5 +61,87 @@ export const LayoutLoading = ({ className = '' }) => (
     <div className="layout-spinner"></div>
   </div>
 );
+
+export const LayoutSignout = ({ className = '' }) => {
+  const activeWallet = useActiveWallet();
+
+  const handleSignout = async () => {
+    if (activeWallet) {
+      await activeWallet.disconnect();
+    }
+    // Also set logout flag for compatibility with existing logic
+    localStorage.setItem('logout', 'true');
+  };
+
+  return (
+    <p
+      onClick={handleSignout}
+      className={`layout-signout ${className}`}
+      style={{
+        position: 'absolute',
+        bottom: '20px',
+        right: '20px',
+        margin: '0',
+        cursor: 'pointer',
+        color: '#636e72',
+        fontSize: '14px',
+        zIndex: 1000
+      }}
+    >
+      Signout
+    </p>
+  );
+};
+
+// Complete layout with header - reusable across pages
+export const LayoutWithHeader = ({ children, showSignout = false, client }) => {
+  const activeWallet = useActiveWallet();
+  const activeAccount = useActiveAccount();
+  const isConnected = activeAccount?.address && activeWallet;
+
+  return (
+    <Layout>
+      <LayoutCard>
+        {showSignout && isConnected && <LayoutSignout />}
+        <LayoutHeader>
+          <LayoutLogo>
+            <LayoutLogoText>CR</LayoutLogoText>
+            <LayoutLogoBadge>$</LayoutLogoBadge>
+          </LayoutLogo>
+          <LayoutTitle>Cash Round</LayoutTitle>
+          <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
+        </LayoutHeader>
+        {children}
+      </LayoutCard>
+    </Layout>
+  );
+};
+
+// Connect wallet layout component
+export const LayoutConnect = ({ client, className = '' }) => {
+  const activeAccount = useActiveAccount();
+  const activeWallet = useActiveWallet();
+  const isConnected = activeAccount?.address && activeWallet;
+
+  return (
+    <div 
+      className={`layout-connect ${className}`}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '20px',
+        padding: '40px 20px'
+      }}
+    >
+      {!isConnected && (
+        <ConnectButton 
+          client={client}
+          theme="light"
+        />
+      )}
+    </div>
+  );
+};
 
 export default Layout; 

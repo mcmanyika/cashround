@@ -39,13 +39,13 @@ module.exports = {
       skipDryRun: true
     },
     
-    // Mumbai Testnet (Polygon)
-    mumbai: {
+    // Amoy Testnet (Polygon)
+    amoy: {
       provider: () => new HDWalletProvider(
         process.env.PRIVATE_KEY,
-        `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
+        `https://polygon-amoy.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
       ),
-      network_id: 80001,
+      network_id: 80002,
       gas: 5500000,
       gasPrice: 30000000000, // 30 gwei
       confirmations: 2,

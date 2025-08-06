@@ -1,22 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import ReferralForm from '../src/components/forms/ReferralForm';
-import MetaMaskConnect from '../src/components/wallet/MetaMaskConnect';
+
 import TreeContract from '../src/abis/Tree.json';
-import { ConnectButton } from "thirdweb/react";
+import { ConnectButton, useActiveWallet, useActiveAccount } from "thirdweb/react";
 import { client } from '../src/client';
-import Layout, { 
-  LayoutCard, 
-  LayoutHeader,
-  LayoutLogo, 
-  LayoutLogoText, 
-  LayoutLogoBadge, 
-  LayoutTitle, 
-  LayoutSubtitle,
-  LayoutLoading 
-} from '../src/components/layout/Layout';
+import { LayoutWithHeader, LayoutConnect, LayoutLoading } from '../src/components/layout/Layout';
 
 export default function Home() {
+  const wallet = useActiveWallet();
+  const activeAccount = useActiveAccount();
   const router = useRouter();
   const [account, setAccount] = useState('');
   const [isConnected, setIsConnected] = useState(false);
@@ -29,33 +21,7 @@ export default function Home() {
   const [isMember, setIsMember] = useState(false);
   const [copyClicked, setCopyClicked] = useState(false);
 
-  useEffect(() => {
-    const finishLoading = () => {
-      setLoading(false);
-    };
-    
-    if (window.ethereum && !localStorage.getItem('logout')) {
-      window.ethereum.request({ method: 'eth_accounts' })
-        .then(accounts => {
-          if (accounts.length > 0) {
-            const Web3 = require('web3');
-            const web3Instance = new Web3(window.ethereum);
-            setAccount(accounts[0]);
-            setIsConnected(true);
-            setWeb3(web3Instance);
-            checkReferrerStatus(web3Instance, accounts[0]);
-            finishLoading();
-          } else {
-            finishLoading();
-          }
-        })
-        .catch(finishLoading);
-    } else {
-      finishLoading();
-    }
-  }, []);
-
-  const checkReferrerStatus = async (web3Instance, accountAddress) => {
+  const checkReferrerStatus = useCallback(async (web3Instance, accountAddress) => {
     if (!web3Instance || !accountAddress) return;
 
     try {
@@ -65,7 +31,7 @@ export default function Home() {
       // Network name mapping for better UX
       const networkNames = {
         137: 'Polygon Mainnet',
-        80001: 'Mumbai Testnet',
+        80002: 'Amoy Testnet',
         5777: 'Local Ganache'
       };
       
@@ -103,7 +69,41 @@ export default function Home() {
       // Silent error handling
       setCheckingReferrer(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const finishLoading = () => {
+      setLoading(false);
+    };
+    
+    if (window.ethereum && !localStorage.getItem('logout')) {
+      window.ethereum.request({ method: 'eth_accounts' })
+        .then(accounts => {
+          if (accounts.length > 0) {
+            const Web3 = require('web3');
+            const web3Instance = new Web3(window.ethereum);
+            setAccount(accounts[0]);
+            setIsConnected(true);
+            setWeb3(web3Instance);
+            checkReferrerStatus(web3Instance, accounts[0]);
+            finishLoading();
+          } else {
+            finishLoading();
+          }
+        })
+        .catch(finishLoading);
+    } else {
+      finishLoading();
+    }
+  }, [checkReferrerStatus]);
+
+  // Redirect to referral page when user connects via thirdweb
+  useEffect(() => {
+    if (activeAccount?.address && wallet) {
+      console.log('User connected, redirecting to referral page...');
+      router.push('/referral');
+    }
+  }, [activeAccount, wallet, router]);
 
   const formatAddress = (address) => {
     if (!address) return '';
@@ -126,195 +126,8 @@ export default function Home() {
   }
 
   return (
-    <Layout>
-      <LayoutCard>
-        <LayoutHeader>
-          <LayoutLogo>
-            <LayoutLogoText>CR</LayoutLogoText>
-            <LayoutLogoBadge>$</LayoutLogoBadge>
-          </LayoutLogo>
-          <LayoutTitle>Cash Round</LayoutTitle>
-          <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
-        </LayoutHeader>
-        
-        {isConnected ? (
-          <div>
-            <div style={{
-              background: 'rgba(0, 184, 148, 0.1)',
-              border: '1px solid rgba(0, 184, 148, 0.2)',
-              borderRadius: '12px',
-              padding: '12px',
-              marginBottom: '20px',
-              fontSize: '14px',
-              color: '#00b894',
-              fontWeight: '500'
-            }}>
-              Connected: {formatAddress(account)}
-              <span 
-                style={{ 
-                  cursor: 'pointer', 
-                  marginLeft: '5px', 
-                  fontSize: '14px',
-                  color: copyClicked ? '#00b894' : '#636e72',
-                  transition: 'all 0.2s ease',
-                  background: copyClicked ? '#e8f5e8' : '#f5f5f5',
-                  borderRadius: '50%',
-                  width: '28px',
-                  height: '28px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: copyClicked ? '1px solid #00b894' : '1px solid #e0e0e0'
-                }} 
-                onClick={() => copyAddress(account)}
-              >
-                📋
-              </span>
-            </div>
-            
-            {checkingReferrer ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '20px'
-              }}>
-                <div style={{
-                  width: '30px',
-                  height: '30px',
-                  border: '3px solid rgba(0, 184, 148, 0.3)',
-                  borderTop: '3px solid #00b894',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                  margin: '0 auto 16px'
-                }}></div>
-                <p style={{
-                  color: '#636e72',
-                  fontSize: '14px',
-                  margin: '0'
-                }}>
-                  Checking your referral status...
-                </p>
-              </div>
-            ) : hasReferrer ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '20px'
-              }}>
-                <div style={{
-                  width: '50px',
-                  height: '50px',
-                  background: 'rgba(0, 184, 148, 0.1)',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px'
-                }}>
-                  <span style={{ fontSize: '24px' }}>✅</span>
-                </div>
-                <p style={{
-                  color: '#2d3436',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  margin: '0 0 8px 0'
-                }}>
-                  You already have a referrer!
-                </p>
-                <p style={{
-                  color: '#636e72',
-                  fontSize: '14px',
-                  margin: '0 0 20px 0'
-                }}>
-                  Redirecting you to the dashboard...
-                </p>
-                <button
-                  onClick={() => router.push('/send-to-referrers')}
-                  style={{
-                    padding: '12px 24px',
-                    background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Go to Dashboard
-                </button>
-              </div>
-            ) : isMember ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '20px'
-              }}>
-                <div style={{
-                  width: '50px',
-                  height: '50px',
-                  background: 'rgba(0, 184, 148, 0.1)',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px'
-                }}>
-                  <span style={{ fontSize: '24px' }}>✅</span>
-                </div>
-                <p style={{
-                  color: '#2d3436',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  margin: '0 0 8px 0'
-                }}>
-                  You are already a member!
-                </p>
-                <p style={{
-                  color: '#636e72',
-                  fontSize: '14px',
-                  margin: '0 0 20px 0'
-                }}>
-                  Redirecting you to the dashboard...
-                </p>
-                <button
-                  onClick={() => router.push('/send-to-referrers')}
-                  style={{
-                    padding: '12px 24px',
-                    background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Go to Dashboard
-                </button>
-              </div>
-            ) : (
-              <ReferralForm web3={web3} account={account} />
-            )}
-          </div>
-        ) : (
-          <div>
-           
-            <ConnectButton client={client}
-              theme="light"
-              />
-            {/* <MetaMaskConnect
-              account={account}
-              setAccount={setAccount}
-              isConnected={isConnected}
-              setIsConnected={setIsConnected}
-              error={error}
-              setError={setError}
-              web3={web3}
-              setWeb3={setWeb3}
-            /> */}
-          </div>
-        )}
-      </LayoutCard>
-    </Layout>
+    <LayoutWithHeader>
+      <LayoutConnect client={client} />
+    </LayoutWithHeader>
   );
 } 

@@ -13,7 +13,8 @@ import Layout, {
   LayoutLogoBadge, 
   LayoutTitle, 
   LayoutSubtitle,
-  LayoutLoading 
+  LayoutLoading,
+  LayoutSignout 
 } from './layout/Layout';
 
 
@@ -64,7 +65,7 @@ function App() {
       // Network name mapping for better UX
       const networkNames = {
         137: 'Polygon Mainnet',
-        80001: 'Mumbai Testnet',
+        80002: 'Amoy Testnet',
         5777: 'Local Ganache'
       };
       
@@ -133,14 +134,7 @@ function App() {
           </Route>
           <Route path="/">
             <LayoutCard>
-              <LayoutHeader>
-                <LayoutLogo>
-                  <LayoutLogoText>CR</LayoutLogoText>
-                  <LayoutLogoBadge>$</LayoutLogoBadge>
-                </LayoutLogo>
-                <LayoutTitle>Cash Rounds</LayoutTitle>
-                <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
-              </LayoutHeader>
+              {isConnected && <LayoutSignout />}
               
               {isConnected ? (
                 <div style={{ width: '100%' }}>
@@ -312,16 +306,7 @@ function App() {
                   }}>
                     Please connect your wallet to continue
                   </p>
-                  <MetaMaskConnect
-                    account={account}
-                    setAccount={setAccount}
-                    isConnected={isConnected}
-                    setIsConnected={setIsConnected}
-                    error={error}
-                    setError={setError}
-                    web3={web3}
-                    setWeb3={setWeb3}
-                  />
+                  
                 </div>
               )}
             </LayoutCard>

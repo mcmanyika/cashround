@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
+import { useActiveWallet } from 'thirdweb/react';
 
 const ReferralForm = ({ web3, account }) => {
   const router = useRouter();
+  const activeWallet = useActiveWallet();
   const [referrerAddress, setReferrerAddress] = useState('');
   const [ethAmount, setEthAmount] = useState('5');
   const [loading, setLoading] = useState(false);
@@ -57,7 +59,7 @@ const ReferralForm = ({ web3, account }) => {
             if (hasPaid) {
                           // If user has already paid, redirect to home page
             setTimeout(() => {
-              router.push('/');
+              // router.push('/');
             }, 2000);
             }
           }
@@ -147,57 +149,94 @@ const ReferralForm = ({ web3, account }) => {
 
   if (isMember) {
     return (
-      <div style={{
-        textAlign: 'center',
-        padding: '20px'
-      }}>
-        <div style={{
-          width: '50px',
-          height: '50px',
-          background: 'rgba(0, 184, 148, 0.1)',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 16px'
-        }}>
-          <span style={{ fontSize: '24px' }}>✅</span>
-        </div>
-        <p style={{
-          color: '#2d3436',
-          fontSize: '16px',
-          fontWeight: '600',
-          margin: '0 0 8px 0'
-        }}>
-          You already a member
-        </p>
-        <p style={{
-          color: '#636e72',
-          fontSize: '14px',
-          margin: '0 0 20px 0'
-        }}>
-          {hasPaidReferrers ? '' : 'Click below to complete your membership'}
-        </p>
-        {!hasPaidReferrers && (
-          <>
-          <button
-            onClick={() => router.push('/send-to-referrers')}
-            style={{
-              padding: '12px 24px',
-              background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Complete Registration
-          </button>
-          </>
+      <div>
+        {/* Connected Address Display */}
+        {account && (
+          <div style={{
+            background: 'rgba(0, 184, 148, 0.1)',
+            border: '1px solid rgba(0, 184, 148, 0.2)',
+            borderRadius: '12px',
+            padding: '12px',
+            marginBottom: '20px',
+            fontSize: '14px',
+            color: '#00b894',
+            fontWeight: '500'
+          }}>
+            Connected: {account.slice(0, 6)}...{account.slice(-4)}
+            <span 
+              style={{ 
+                cursor: 'pointer', 
+                marginLeft: '5px', 
+                fontSize: '14px',
+                color: '#636e72',
+                background: '#f5f5f5',
+                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid #e0e0e0'
+              }} 
+              onClick={() => navigator.clipboard.writeText(account)}
+            >
+              📋
+            </span>
+          </div>
         )}
+        
+        <div style={{
+          textAlign: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            background: 'rgba(0, 184, 148, 0.1)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px'
+          }}>
+            <span style={{ fontSize: '24px' }}>✅</span>
+          </div>
+          <p style={{
+            color: '#2d3436',
+            fontSize: '16px',
+            fontWeight: '600',
+            margin: '0 0 8px 0'
+          }}>
+            You already a member
+          </p>
+          <p style={{
+            color: '#636e72',
+            fontSize: '14px',
+            margin: '0 0 20px 0'
+          }}>
+            {hasPaidReferrers ? '' : 'Click below to complete your membership'}
+          </p>
+          {!hasPaidReferrers && (
+            <>
+            <button
+              onClick={() => router.push('/send-to-referrers')}
+              style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Complete Registration
+            </button>
+            </>
+          )}
+        </div>
       </div>
     );
   }

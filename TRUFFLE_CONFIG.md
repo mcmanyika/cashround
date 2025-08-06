@@ -22,7 +22,7 @@ INFURA_API_KEY=your_infura_api_key_here
 
 - **Goerli ETH**: https://goerlifaucet.com/
 - **Sepolia ETH**: https://sepoliafaucet.com/
-- **Mumbai MATIC**: https://faucet.polygon.technology/
+- **Amoy MATIC**: https://faucet.polygon.technology/
 
 ## **⚙️ Truffle Configuration**
 
@@ -71,14 +71,14 @@ module.exports = {
       skipDryRun: true,
     },
 
-    // Mumbai Testnet (Polygon)
-    mumbai: {
+    // Amoy Testnet (Polygon)
+    amoy: {
       provider: () =>
         new HDWalletProvider(
           process.env.PRIVATE_KEY,
-          `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
+          `https://polygon-amoy.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
         ),
-      network_id: 80001,
+      network_id: 80002,
       gas: 5500000,
       gasPrice: 30000000000, // 30 gwei
       confirmations: 2,
@@ -130,10 +130,10 @@ truffle migrate --network goerli
 truffle migrate --network sepolia
 ```
 
-### **Deploy to Mumbai (Polygon Testnet):**
+### **Deploy to Amoy (Polygon Testnet):**
 
 ```bash
-truffle migrate --network mumbai
+truffle migrate --network amoy
 ```
 
 ### **Deploy to Polygon Mainnet:**
@@ -145,17 +145,17 @@ truffle migrate --network polygon
 ### **Deploy specific migration:**
 
 ```bash
-truffle migrate --network mumbai --f 2
+truffle migrate --network amoy --f 2
 ```
 
 ## **📊 Network Information**
 
-| Network     | Chain ID | RPC URL                                            | Explorer                       | Faucet                             |
-| ----------- | -------- | -------------------------------------------------- | ------------------------------ | ---------------------------------- |
-| **Goerli**  | 5        | `https://eth-goerli.g.alchemy.com/v2/API_KEY`      | https://goerli.etherscan.io    | https://goerlifaucet.com/          |
-| **Sepolia** | 11155111 | `https://eth-sepolia.g.alchemy.com/v2/API_KEY`     | https://sepolia.etherscan.io   | https://sepoliafaucet.com/         |
-| **Mumbai**  | 80001    | `https://polygon-mumbai.g.alchemy.com/v2/API_KEY`  | https://mumbai.polygonscan.com | https://faucet.polygon.technology/ |
-| **Polygon** | 137      | `https://polygon-mainnet.g.alchemy.com/v2/API_KEY` | https://polygonscan.com        | N/A                                |
+| Network     | Chain ID | RPC URL                                            | Explorer                     | Faucet                             |
+| ----------- | -------- | -------------------------------------------------- | ---------------------------- | ---------------------------------- |
+| **Goerli**  | 5        | `https://eth-goerli.g.alchemy.com/v2/API_KEY`      | https://goerli.etherscan.io  | https://goerlifaucet.com/          |
+| **Sepolia** | 11155111 | `https://eth-sepolia.g.alchemy.com/v2/API_KEY`     | https://sepolia.etherscan.io | https://sepoliafaucet.com/         |
+| **Amoy**    | 80002    | `https://polygon-amoy.g.alchemy.com/v2/API_KEY`    | https://amoy.polygonscan.com | https://faucet.polygon.technology/ |
+| **Polygon** | 137      | `https://polygon-mainnet.g.alchemy.com/v2/API_KEY` | https://polygonscan.com      | N/A                                |
 
 ## **🔧 Update Contract Addresses**
 
@@ -167,7 +167,7 @@ const CONTRACT_ADDRESS = {
   5: "DEPLOYED_GOERLI_ADDRESS", // Goerli Testnet
   11155111: "DEPLOYED_SEPOLIA_ADDRESS", // Sepolia Testnet
   137: "DEPLOYED_POLYGON_ADDRESS", // Polygon Mainnet
-  80001: "DEPLOYED_MUMBAI_ADDRESS", // Mumbai Testnet
+  80002: "DEPLOYED_AMOY_ADDRESS", // Amoy Testnet
   5777: "0xE20677F28c03F92Ff84C76BC8AF419a6e2D9D6e3", // Local Ganache
 };
 
@@ -185,8 +185,8 @@ truffle run verify --network goerli
 # Sepolia
 truffle run verify --network sepolia
 
-# Mumbai
-truffle run verify --network mumbai
+# Amoy
+truffle run verify --network amoy
 
 # Polygon
 truffle run verify --network polygon
@@ -215,7 +215,7 @@ api_keys: {
 | **Ethereum Mainnet** | ~$50-100       | ~$200-500        | ~$250-600 |
 | **Goerli**           | Free (testnet) | Free (testnet)   | Free      |
 | **Sepolia**          | Free (testnet) | Free (testnet)   | Free      |
-| **Mumbai**           | ~$0.001        | ~$0.005          | ~$0.006   |
+| **Amoy**             | ~$0.001        | ~$0.005          | ~$0.006   |
 | **Polygon**          | ~$0.01         | ~$0.05           | ~$0.06    |
 
 ## **🎯 Testing Strategy**
@@ -229,7 +229,7 @@ api_keys: {
 ### **2. Testnet Testing**
 
 - **Goerli/Sepolia**: Test Ethereum functionality
-- **Mumbai**: Test Polygon functionality
+- **Amoy**: Test Polygon functionality
 - Verify gas costs and transaction speeds
 
 ### **3. Mainnet Deployment**
@@ -254,13 +254,13 @@ Update `truffle-config.js` with testnet configurations
 
 - Goerli: https://goerlifaucet.com/
 - Sepolia: https://sepoliafaucet.com/
-- Mumbai: https://faucet.polygon.technology/
+- Amoy: https://faucet.polygon.technology/
 
 ### **4. Deploy:**
 
 ```bash
-# Test on Mumbai first
-truffle migrate --network mumbai
+# Test on Amoy first
+truffle migrate --network amoy
 
 # Then Goerli
 truffle migrate --network goerli
