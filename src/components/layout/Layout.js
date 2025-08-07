@@ -1,5 +1,23 @@
 import React from 'react';
 import { useActiveWallet, useActiveAccount, ConnectButton } from 'thirdweb/react';
+import { lightTheme } from 'thirdweb/react';
+import { inAppWallet, createWallet } from "thirdweb/wallets";
+
+const wallets = [
+  inAppWallet({
+    auth: {
+      options: [
+        "google",
+        "email",
+        "passkey",
+        "phone",
+      ],
+    },
+  }),
+  createWallet("io.metamask"),
+  createWallet("com.coinbase.wallet"),
+];
+
 
 const Layout = ({ 
   children, 
@@ -137,7 +155,15 @@ export const LayoutConnect = ({ client, className = '' }) => {
       {!isConnected && (
         <ConnectButton 
           client={client}
-          theme="light"
+          connectButton={{ label: "Sign In" }}
+          theme={lightTheme({
+            colors: {
+              accentText: "hsl(216, 100%, 60%)",
+              borderColor: "hsl(262, 11%, 86%)",
+              accentButtonBg: "hsl(216, 76%, 35%)",
+            },
+          })}
+          wallets={wallets}
         />
       )}
     </div>
