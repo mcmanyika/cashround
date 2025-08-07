@@ -152,7 +152,7 @@ export const LayoutConnect = ({ client, className = '' }) => {
         flexDirection: 'column',
         alignItems: 'center',
         gap: '20px',
-        padding: '40px 20px'
+        padding: '20px 20px'
       }}
     >
       {!isConnected && (
@@ -161,9 +161,9 @@ export const LayoutConnect = ({ client, className = '' }) => {
           connectButton={{ label: "Sign In" }}
           theme={lightTheme({
             colors: {
-              accentText: "hsl(216, 100%, 60%)",
+              accentText: "hsl(151, 55%, 42%)", 
               borderColor: "hsl(262, 11%, 86%)",
-              accentButtonBg: "hsl(216, 76%, 35%)",
+              accentButtonBg: "hsl(151, 55%, 42%)",
               success: "hsl(151, 55%, 42%)",
             },
           })}
