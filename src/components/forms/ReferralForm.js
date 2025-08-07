@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet } from 'thirdweb/react';
+import { getContractAddress, isNetworkSupported } from '../../config/contractConfig';
 
 // Helper function to get all referrers in the entire tree
 const getAllReferrers = async (contract, userAddress) => {
@@ -54,7 +55,16 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
         try {
           const id = await web3.eth.net.getId();
           setNetworkId(id);
-          const networkData = TreeContract.networks[id];
+          
+          // Handle Polygon mainnet (network ID 137) and other networks
+          let networkData;
+          if (id === 137) {
+            // Polygon mainnet
+            networkData = TreeContract.networks[137];
+          } else {
+            // Other networks (local, testnets, etc.)
+            networkData = TreeContract.networks[id];
+          }
           
           if (networkData && networkData.address) {
             const contractInstance = new web3.eth.Contract(
@@ -62,9 +72,11 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
               networkData.address
             );
             setContract(contractInstance);
+          } else {
+            console.log('Contract not found for network ID:', id);
           }
         } catch (error) {
-          // Silent error handling
+          console.error('Error initializing contract:', error);
         }
       }
     };
@@ -196,7 +208,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
       return;
     }
 
-    if (!networkId || !TreeContract.networks[networkId]) {
+    if (!networkId || !isNetworkSupported(networkId)) {
       toast.error('Please connect to a supported network');
       return;
     }
@@ -536,7 +548,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             letterSpacing: '0.5px'
           }}
-          disabled={loading || !web3 || !account || !TreeContract.networks[networkId]}
+          disabled={loading || !web3 || !account || (!TreeContract.networks[networkId] && networkId !== 137)}
           onMouseEnter={(e) => {
             if (!e.target.disabled) {
               e.target.style.transform = 'translateY(-1px)';

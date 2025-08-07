@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { toast } from 'react-toastify';
 import { LayoutWithHeader } from '../layout/Layout';
+import { getContractAddress, isNetworkSupported } from '../../config/contractConfig';
 
 const SendToReferrers = ({ web3, account }) => {
   const router = useRouter();
@@ -10,7 +11,7 @@ const SendToReferrers = ({ web3, account }) => {
   const [error, setError] = useState('');
   const [networkId, setNetworkId] = useState(null);
   const [hasPaid, setHasPaid] = useState(false);
-  const [ethAmountPerMember, setEthAmountPerMember] = useState('5');
+  const [polAmountPerMember, setPolAmountPerMember] = useState('5');
   const [contract, setContract] = useState(null);
   const [referralChain, setReferralChain] = useState([]);
   const [isMember, setIsMember] = useState(false);
@@ -41,16 +42,17 @@ const SendToReferrers = ({ web3, account }) => {
       if (web3) {
         try {
           const networkId = await web3.eth.net.getId();
-          const networkData = TreeContract.networks[networkId];
           setNetworkId(networkId);
           
-          if (networkData && networkData.address) {
+          const contractAddress = getContractAddress(networkId);
+          
+          if (contractAddress) {
             const contractInstance = new web3.eth.Contract(
               TreeContract.abi,
-              networkData.address
+              contractAddress
             );
             setContract(contractInstance);
-            console.log('Contract initialized at:', networkData.address);
+            console.log('Contract initialized at:', contractAddress);
           } else {
             console.error('No contract found on network:', networkId);
             setError(`No contract found on network ${networkId}`);
@@ -175,8 +177,8 @@ const SendToReferrers = ({ web3, account }) => {
       return;
     }
 
-    if (!ethAmountPerMember || isNaN(ethAmountPerMember) || parseFloat(ethAmountPerMember) <= 0) {
-      setError('Please enter a valid ETH amount per member');
+    if (!polAmountPerMember || isNaN(polAmountPerMember) || parseFloat(polAmountPerMember) <= 0) {
+      setError('Please enter a valid POL amount per member');
       return;
     }
 
@@ -189,24 +191,24 @@ const SendToReferrers = ({ web3, account }) => {
     setError('');
 
     try {
-      const ethAmountWei = web3.utils.toWei(ethAmountPerMember, 'ether');
-      const totalEthNeeded = web3.utils.toBN(ethAmountWei).mul(web3.utils.toBN(referralChain.length));
+      const polAmountWei = web3.utils.toWei(polAmountPerMember, 'ether');
+      const totalPolNeeded = web3.utils.toBN(polAmountWei).mul(web3.utils.toBN(referralChain.length));
       const balance = await web3.eth.getBalance(account);
       
-      if (web3.utils.toBN(balance).lt(totalEthNeeded)) {
-        setError(`Insufficient balance. You need ${web3.utils.fromWei(totalEthNeeded, 'ether')} ETH`);
+      if (web3.utils.toBN(balance).lt(totalPolNeeded)) {
+        setError(`Insufficient balance. You need ${web3.utils.fromWei(totalPolNeeded, 'ether')} POL`);
         setLoading(false);
         return;
       }
 
       // Call batchPay with all referrers in one transaction
-      await contract.methods.batchPay(referralChain, ethAmountWei)
+      await contract.methods.batchPay(referralChain, polAmountWei)
         .send({
           from: account,
-          value: totalEthNeeded.toString()
+          value: totalPolNeeded.toString()
         });
 
-      toast.success(`✅ Successfully sent ${ethAmountPerMember} ETH to ${referralChain.length} referrers!`);
+      toast.success(`✅ Successfully sent ${polAmountPerMember} POL to ${referralChain.length} referrers!`);
       setHasPaid(true);
     } catch (err) {
       if (err.code === 4001) {
@@ -242,7 +244,7 @@ const SendToReferrers = ({ web3, account }) => {
       // Check if user has sufficient balance
       const balance = await web3.eth.getBalance(account);
       if (web3.utils.toBN(balance).lt(web3.utils.toBN(membershipFee))) {
-        setError('Insufficient balance. You need 0.01 ETH for membership');
+        setError('Insufficient balance. You need 0.01 POL for membership');
         setLoading(false);
         return;
       }
@@ -277,7 +279,7 @@ const SendToReferrers = ({ web3, account }) => {
       } else if (err.message && err.message.includes('Inviter must exist')) {
         setError('Invalid referrer address');
       } else if (err.message && err.message.includes('ETH amount must be greater than zero')) {
-        setError('Invalid ETH amount');
+        setError('Invalid POL amount');
       } else {
         setError(err.message || 'Error becoming a member');
       }
@@ -398,8 +400,8 @@ const SendToReferrers = ({ web3, account }) => {
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                 }}
-                value={ethAmountPerMember}
-                onChange={(e) => setEthAmountPerMember(e.target.value)}
+                value={polAmountPerMember}
+                onChange={(e) => setPolAmountPerMember(e.target.value)}
                 placeholder="Enter amount per referrer"
                 required
                 onFocus={(e) => {
@@ -453,15 +455,15 @@ const SendToReferrers = ({ web3, account }) => {
                 fontSize: '14px',
                 margin: '0'
               }}>
-                • Amount per referrer: {ethAmountPerMember} ETH
+                • Amount per referrer: {polAmountPerMember} POL
                 <br />
-                • Total: {ethAmountPerMember * referralChain.length} ETH
+                • Total: {polAmountPerMember * referralChain.length} POL
               </p>
             </div>
 
             <button
               onClick={handleSendToReferrers}
-              disabled={loading || !ethAmountPerMember}
+              disabled={loading || !polAmountPerMember}
               style={{
                 width: '100%',
                 padding: '18px 24px',
