@@ -7,15 +7,12 @@ const wallets = [
   inAppWallet({
     auth: {
       options: [
-        "google",
         "email",
-        "passkey",
         "phone",
       ],
     },
   }),
   createWallet("io.metamask"),
-  createWallet("com.coinbase.wallet"),
 ];
 
 

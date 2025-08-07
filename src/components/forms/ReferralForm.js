@@ -19,6 +19,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
   const [checkingMembership, setCheckingMembership] = useState(true);
   const [hasPaidReferrers, setHasPaidReferrers] = useState(false);
   const [referralChain, setReferralChain] = useState([]);
+  const [totalAmountReceived, setTotalAmountReceived] = useState('0');
 
   // Get network ID and initialize contract when component mounts or web3 changes
   useEffect(() => {
@@ -58,6 +59,31 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           if (member) {
             const hasPaid = await contract.methods.hasPaidUpliners(account).call();
             setHasPaidReferrers(hasPaid);
+            
+            // Get total amount received by querying Payments events
+            try {
+              const fromBlock = 0; // Start from the beginning
+              const toBlock = 'latest';
+              
+              // Get all Payments events where the user is the recipient
+              const events = await contract.getPastEvents('Payments', {
+                fromBlock: fromBlock,
+                toBlock: toBlock,
+                filter: { to: account }
+              });
+              
+              // Calculate total amount received
+              let totalReceived = web3.utils.toBN('0');
+              events.forEach(event => {
+                totalReceived = totalReceived.add(web3.utils.toBN(event.returnValues.amount));
+              });
+              
+              const totalInEth = web3.utils.fromWei(totalReceived, 'ether');
+              setTotalAmountReceived(totalInEth);
+            } catch (error) {
+              console.error('Error fetching total amount received:', error);
+              setTotalAmountReceived('0');
+            }
             
             // Build referral chain
             const referralChain = [];
@@ -268,6 +294,50 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             ))}
           </div>
         )}
+        
+        {/* Total Amount Received Display */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(0, 184, 148, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%)',
+          border: '1px solid rgba(0, 184, 148, 0.2)',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '8px'
+          }}>
+            <span style={{ fontSize: '20px', marginRight: '8px' }}>💰</span>
+            <p style={{
+              color: '#2d3436',
+              fontSize: '16px',
+              fontWeight: '600',
+              margin: '0'
+            }}>
+              Total Amount Received
+            </p>
+          </div>
+          <p style={{
+            color: '#00b894',
+            fontSize: '24px',
+            fontWeight: '700',
+            margin: '0',
+            fontFamily: 'monospace'
+          }}>
+            {parseFloat(totalAmountReceived).toFixed(4)} ETH
+          </p>
+          <p style={{
+            color: '#636e72',
+            fontSize: '12px',
+            margin: '8px 0 0 0',
+            opacity: '0.8'
+          }}>
+            From referral rewards
+          </p>
+        </div>
         
         <div style={{
           textAlign: 'center',
