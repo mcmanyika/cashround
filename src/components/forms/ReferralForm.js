@@ -4,6 +4,32 @@ import TreeContract from '../../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet } from 'thirdweb/react';
 
+// Helper function to get all referrers in the entire tree
+const getAllReferrers = async (contract, userAddress) => {
+  const allReferrers = [];
+  let currentAddress = userAddress;
+  const maxIterations = 100; // Safety limit to prevent infinite loops
+  let iteration = 0;
+  
+  while (currentAddress !== '0x0000000000000000000000000000000000000000' && iteration < maxIterations) {
+    try {
+      const userData = await contract.methods.tree(currentAddress).call();
+      if (userData.inviter !== '0x0000000000000000000000000000000000000000') {
+        allReferrers.push(userData.inviter);
+        currentAddress = userData.inviter;
+      } else {
+        break; // Reached the top of the tree
+      }
+    } catch (error) {
+      console.error('Error traversing referral tree:', error);
+      break;
+    }
+    iteration++;
+  }
+  
+  return allReferrers;
+};
+
 const ReferralForm = ({ web3, account, setIsMember }) => {
   const router = useRouter();
   const activeWallet = useActiveWallet();
@@ -60,7 +86,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             const hasPaid = await contract.methods.hasPaidUpliners(account).call();
             setHasPaidReferrers(hasPaid);
             
-            // Get total amount received by querying Payments events
+            // Get total amount received from all levels in the referral tree
             try {
               const fromBlock = 0; // Start from the beginning
               const toBlock = 'latest';
@@ -72,13 +98,36 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
                 filter: { to: account }
               });
               
-              // Calculate total amount received
+              // Calculate total amount received from direct payments
               let totalReceived = web3.utils.toBN('0');
               events.forEach(event => {
                 totalReceived = totalReceived.add(web3.utils.toBN(event.returnValues.amount));
               });
               
-              const totalInEth = web3.utils.fromWei(totalReceived, 'ether');
+              // Now calculate total from all levels in the referral tree
+              const allReferrers = await getAllReferrers(contract, account);
+              let totalFromAllLevels = web3.utils.toBN('0');
+              
+              // Get payments from all referrers in the tree
+              for (const referrer of allReferrers) {
+                try {
+                  const referrerEvents = await contract.getPastEvents('Payments', {
+                    fromBlock: fromBlock,
+                    toBlock: toBlock,
+                    filter: { from: referrer, to: account }
+                  });
+                  
+                  referrerEvents.forEach(event => {
+                    totalFromAllLevels = totalFromAllLevels.add(web3.utils.toBN(event.returnValues.amount));
+                  });
+                } catch (error) {
+                  console.error(`Error fetching payments from referrer ${referrer}:`, error);
+                }
+              }
+              
+              // Add direct payments and payments from all levels
+              const grandTotal = totalReceived.add(totalFromAllLevels);
+              const totalInEth = web3.utils.fromWei(grandTotal, 'ether');
               setTotalAmountReceived(totalInEth);
             } catch (error) {
               console.error('Error fetching total amount received:', error);
@@ -327,7 +376,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             margin: '0',
             fontFamily: 'monospace'
           }}>
-            {parseFloat(totalAmountReceived).toFixed(4)} ETH
+            {parseFloat(totalAmountReceived).toFixed(2)} POL
           </p>
           <p style={{
             color: '#636e72',
