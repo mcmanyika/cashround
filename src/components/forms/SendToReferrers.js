@@ -289,27 +289,6 @@ const SendToReferrers = ({ web3, account }) => {
   return (
     <LayoutWithHeader showSignout={true}>
       <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-        
-        {/* Debug Information - Always Visible */}
-        <div style={{
-          background: '#f8f9fa',
-          border: '1px solid #dee2e6',
-          borderRadius: '8px',
-          padding: '12px',
-          marginBottom: '16px',
-          fontSize: '12px',
-          color: '#495057'
-        }}>
-          <strong>Debug Info:</strong> {debugInfo || 'Initializing...'}<br/>
-          <strong>Is Member:</strong> {isMember.toString()}<br/>
-          <strong>Has Paid:</strong> {hasPaid.toString()}<br/>
-          <strong>Referral Chain Length:</strong> {referralChain.length}<br/>
-          <strong>Network ID:</strong> {networkId || 'Not set'}<br/>
-          <strong>Contract:</strong> {contract ? 'Loaded' : 'Not loaded'}<br/>
-          <strong>Account:</strong> {account ? `${account.slice(0,6)}...${account.slice(-4)}` : 'Not set'}<br/>
-          <strong>Web3:</strong> {web3 ? 'Loaded' : 'Not loaded'}
-        </div>
-
         {account && (
           <div style={{
             background: 'rgba(0, 184, 148, 0.1)',

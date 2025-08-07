@@ -13,6 +13,7 @@ export default function ReferralPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [web3, setWeb3] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMember, setIsMember] = useState(false);
 
   // Sync thirdweb connection state with local state
   useEffect(() => {
@@ -44,8 +45,8 @@ export default function ReferralPage() {
   }
 
   return (
-    <LayoutWithHeader showSignout={true}>
-      <ReferralForm web3={web3} account={account} />
+    <LayoutWithHeader showSignout={true} isMember={isMember}>
+      <ReferralForm web3={web3} account={account} setIsMember={setIsMember} />
     </LayoutWithHeader>
   );
 }

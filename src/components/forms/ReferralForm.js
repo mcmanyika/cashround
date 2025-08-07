@@ -4,7 +4,7 @@ import TreeContract from '../../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet } from 'thirdweb/react';
 
-const ReferralForm = ({ web3, account }) => {
+const ReferralForm = ({ web3, account, setIsMember }) => {
   const router = useRouter();
   const activeWallet = useActiveWallet();
   const [referrerAddress, setReferrerAddress] = useState('');
@@ -15,7 +15,7 @@ const ReferralForm = ({ web3, account }) => {
   const [networkId, setNetworkId] = useState(null);
   const [showBecomeMember, setShowBecomeMember] = useState(false);
   const [contract, setContract] = useState(null);
-  const [isMember, setIsMember] = useState(false);
+  const [isMember, setIsMemberLocal] = useState(false);
   const [checkingMembership, setCheckingMembership] = useState(true);
   const [hasPaidReferrers, setHasPaidReferrers] = useState(false);
   const [referralChain, setReferralChain] = useState([]);
@@ -51,6 +51,7 @@ const ReferralForm = ({ web3, account }) => {
         try {
           const userData = await contract.methods.tree(account).call();
           const member = userData.inviter !== '0x0000000000000000000000000000000000000000';
+          setIsMemberLocal(member);
           setIsMember(member);
           
           // Also check if user has already paid their referrers and build referral chain
@@ -103,6 +104,7 @@ const ReferralForm = ({ web3, account }) => {
           setCheckingMembership(false);
         } catch (error) {
           console.error('Error checking membership:', error);
+          setIsMemberLocal(false);
           setIsMember(false);
           setHasPaidReferrers(false);
           setCheckingMembership(false);
@@ -129,10 +131,26 @@ const ReferralForm = ({ web3, account }) => {
       return;
     }
 
+    // Validate referrer address format
+    if (!web3.utils.isAddress(referrerAddress)) {
+      toast.error('Please enter a valid wallet address');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
       setSuccess('');
+
+      // Check if the referrer address exists in the contract
+      const referrerData = await contract.methods.tree(referrerAddress).call();
+      const isReferrerMember = referrerData.inviter !== '0x0000000000000000000000000000000000000000';
+      
+      if (!isReferrerMember) {
+        toast.error('The referrer address you entered is not a member. Please enter a valid member address.');
+        setLoading(false);
+        return;
+      }
 
       const ethAmountWei = web3.utils.toWei(ethAmount, 'ether');
 
@@ -314,8 +332,8 @@ const ReferralForm = ({ web3, account }) => {
       minHeight: 'fit-content'
     }}>
       <ToastContainer
-        position="top-right"
-        autoClose={5000}
+        position="top-center"
+        autoClose={8000}
         hideProgressBar={false}
         newestOnTop
         closeOnClick
@@ -343,16 +361,6 @@ const ReferralForm = ({ web3, account }) => {
           marginBottom: '24px',
           width: '100%'
         }}>
-          <label style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#2d3436',
-            marginBottom: '8px',
-            textAlign: 'left'
-          }}>
-            Referrer Address
-          </label>
           <input
             type="text"
             id="referrerAddress"

@@ -103,6 +103,7 @@ export const LayoutSignout = ({ className = '' }) => {
         cursor: 'pointer',
         color: '#636e72',
         fontSize: '14px',
+        padding: '10px',
         zIndex: 1000
       }}
     >
@@ -112,7 +113,7 @@ export const LayoutSignout = ({ className = '' }) => {
 };
 
 // Complete layout with header - reusable across pages
-export const LayoutWithHeader = ({ children, showSignout = false, client }) => {
+export const LayoutWithHeader = ({ children, showSignout = false, client, isMember = false }) => {
   const activeWallet = useActiveWallet();
   const activeAccount = useActiveAccount();
   const isConnected = activeAccount?.address && activeWallet;
@@ -127,7 +128,9 @@ export const LayoutWithHeader = ({ children, showSignout = false, client }) => {
             <LayoutLogoBadge>$</LayoutLogoBadge>
           </LayoutLogo>
           <LayoutTitle>Cash Round</LayoutTitle>
-          <LayoutSubtitle>Connect with your referrer and start earning rewards.</LayoutSubtitle>
+          <LayoutSubtitle>
+            {isMember ? "Welcome Back! Continue Earning Rewards." : "Join Our Network And Start Earning Rewards."}
+          </LayoutSubtitle>
         </LayoutHeader>
         {children}
       </LayoutCard>
@@ -161,6 +164,7 @@ export const LayoutConnect = ({ client, className = '' }) => {
               accentText: "hsl(216, 100%, 60%)",
               borderColor: "hsl(262, 11%, 86%)",
               accentButtonBg: "hsl(216, 76%, 35%)",
+              success: "hsl(151, 55%, 42%)",
             },
           })}
           wallets={wallets}
