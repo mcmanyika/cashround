@@ -1,6 +1,6 @@
 // Contract addresses for different networks
 const CONTRACT_ADDRESSES = {
-  137: process.env.NEXT_PUBLIC_POLYGON_MAINNET_CONTRACT_ADDRESS || "0xa1268396c94543f42238accfaee9776fce12a52a", // Polygon Mainnet
+  137: process.env.NEXT_PUBLIC_POLYGON_MAINNET_CONTRACT_ADDRESS || "0xb7fd0c9708edd8b3b6a454ba09d4de2838af1608", // Polygon Mainnet
   1337: "0x7501C433e99F1F1a94EDdcce6Fe0b881cA3a83D4", // Local development
   5777: "0xE20677F28c03F92Ff84C76BC8AF419a6e2D9D6e3", // Local development
 };

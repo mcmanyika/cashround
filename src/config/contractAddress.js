@@ -1,4 +1,4 @@
-export const POLYGON_MAINNET_CONTRACT_ADDRESS = "0xa1268396c94543f42238accfaee9776fce12a52a";
+export const POLYGON_MAINNET_CONTRACT_ADDRESS = "0xb7fd0c9708edd8b3b6a454ba09d4de2838af1608";
 
 export const getContractAddress = (networkId) => {
   switch (networkId) {
