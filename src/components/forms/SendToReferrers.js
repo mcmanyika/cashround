@@ -199,21 +199,58 @@ const SendToReferrers = ({ web3, account }) => {
     setError('');
 
     try {
+      // Debug values and compute totals
+      console.log('[SendToReferrers] polAmountPerMember (POL):', polAmountPerMember);
       const polAmountWei = web3.utils.toWei(polAmountPerMember, 'ether');
-      const totalPolNeeded = web3.utils.toBN(polAmountWei).mul(web3.utils.toBN(referralChain.length));
+      const totalPolNeeded = web3.utils
+        .toBN(polAmountWei)
+        .mul(web3.utils.toBN(referralChain.length));
+      console.log('[SendToReferrers] polAmountWei:', polAmountWei);
+      console.log('[SendToReferrers] referralChain.length:', referralChain.length);
+      console.log('[SendToReferrers] totalPolNeeded (wei):', totalPolNeeded.toString());
+
       const balance = await web3.eth.getBalance(account);
-      
       if (web3.utils.toBN(balance).lt(totalPolNeeded)) {
         setError(`Insufficient balance. You need ${web3.utils.fromWei(totalPolNeeded, 'ether')} POL`);
         setLoading(false);
         return;
       }
 
+      // Preflight gas estimate to capture revert reasons
+      let estimatedGas;
+      try {
+        estimatedGas = await contract.methods
+          .batchPay(referralChain, polAmountWei)
+          .estimateGas({ from: account, value: totalPolNeeded.toString() });
+        console.log('[SendToReferrers] estimatedGas:', estimatedGas);
+      } catch (estimateErr) {
+        console.error('[SendToReferrers] Gas estimate failed:', estimateErr);
+        const reason =
+          estimateErr?.reason ||
+          estimateErr?.message ||
+          estimateErr?.data?.message ||
+          estimateErr?.data?.originalError?.message ||
+          'Transaction would fail during estimation.';
+        if (reason.includes('Incorrect ETH sent')) {
+          setError('Payment failed: Incorrect POL value calculated. Please refresh and try again.');
+        } else if (reason.includes('already paid your upliners')) {
+          setError('You have already paid your upliners on this network.');
+        } else if (reason.includes('execution reverted')) {
+          setError(`Transaction would revert: ${reason}`);
+        } else {
+          setError(reason);
+        }
+        setLoading(false);
+        return;
+      }
+
       // Call batchPay with all referrers in one transaction
-      await contract.methods.batchPay(referralChain, polAmountWei)
-        .send({
-          from: account,
-          value: totalPolNeeded.toString()
+      await contract.methods
+        .batchPay(referralChain, polAmountWei)
+        .send({ 
+          from: account, 
+          value: totalPolNeeded.toString(),
+          gas: Math.floor(Number(estimatedGas) * 1.2) || undefined
         });
 
       toast.success(`✅ Successfully sent $${calculateUSDValue(polAmountPerMember)} (${polAmountPerMember} POL) to ${referralChain.length} referrers!`);
@@ -222,7 +259,13 @@ const SendToReferrers = ({ web3, account }) => {
       if (err.code === 4001) {
         setError('Transaction was rejected by the user.');
       } else {
-        setError(err.message || 'Error sending payments to referrers');
+        const reason =
+          err?.reason ||
+          err?.message ||
+          err?.data?.message ||
+          err?.data?.originalError?.message ||
+          'Error sending payments to referrers';
+        setError(reason);
       }
     } finally {
       setLoading(false);

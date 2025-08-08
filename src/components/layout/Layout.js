@@ -8,7 +8,6 @@ const wallets = [
     auth: {
       options: [
         "email",
-        "phone",
       ],
     },
   }),
@@ -94,7 +93,7 @@ export const LayoutSignout = ({ className = '' }) => {
       className={`layout-signout ${className}`}
       style={{
         position: 'absolute',
-        bottom: '20px',
+        bottom: '30px',
         right: '20px',
         margin: '0',
         cursor: 'pointer',

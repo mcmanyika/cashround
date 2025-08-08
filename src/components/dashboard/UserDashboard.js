@@ -144,7 +144,7 @@ const UserDashboard = ({ web3, account }) => {
                   {sentPayments.map((event, idx) => (
                     <tr key={event.id || event.transactionHash + idx}>
                       <td className="monospace">{event.returnValues.to}</td>
-                      <td>${calculateUSDValue(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether'))} ({web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')} POL)</td>
+                      <td>${calculateUSDValue(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether'))} ({parseFloat(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')).toFixed(2)} POL)</td>
                       <td className="monospace tx-hash">
                         {event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}
                       </td>
@@ -178,7 +178,7 @@ const UserDashboard = ({ web3, account }) => {
                   {receivedPayments.map((event, idx) => (
                     <tr key={event.id || event.transactionHash + idx}>
                       <td className="monospace">{event.returnValues.from}</td>
-                      <td>${calculateUSDValue(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether'))} ({web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')} POL)</td>
+                      <td>${calculateUSDValue(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether'))} ({parseFloat(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')).toFixed(2)} POL)</td>
                       <td className="monospace tx-hash">
                         {event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}
                       </td>
