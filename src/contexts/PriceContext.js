@@ -101,10 +101,14 @@ export const usePriceContext = () => {
 
 // HOC for components that need price data
 export const withPrice = (Component) => {
-  return (props) => {
+  const WithPriceComponent = (props) => {
     const priceContext = usePriceContext();
     return <Component {...props} price={priceContext} />;
   };
+  
+  WithPriceComponent.displayName = `withPrice(${Component.displayName || Component.name || 'Component'})`;
+  
+  return WithPriceComponent;
 };
 
 export default PriceContext;
