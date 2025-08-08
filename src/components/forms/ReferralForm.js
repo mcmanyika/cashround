@@ -47,6 +47,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
   const [hasPaidReferrers, setHasPaidReferrers] = useState(false);
   const [referralChain, setReferralChain] = useState([]);
   const [totalAmountReceived, setTotalAmountReceived] = useState('0');
+  const [isContractOwner, setIsContractOwner] = useState(false);
 
   // Get network ID and initialize contract when component mounts or web3 changes
   useEffect(() => {
@@ -92,6 +93,15 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           const member = userData.inviter !== '0x0000000000000000000000000000000000000000';
           setIsMemberLocal(member);
           setIsMember(member);
+          
+          // Check if user is the contract owner
+          try {
+            const topAddress = await contract.methods.top().call();
+            setIsContractOwner(account.toLowerCase() === topAddress.toLowerCase());
+          } catch (error) {
+            console.error('Error checking contract owner:', error);
+            setIsContractOwner(false);
+          }
           
           // Also check if user has already paid their referrers and build referral chain
           if (member) {
@@ -400,30 +410,132 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           </p>
         </div>
         
+        {/* Potential Earnings Calculator - Hidden for contract owner */}
+        {!isContractOwner && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%)',
+          border: '2px solid rgba(255, 215, 0, 0.3)',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '20px',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            left: '-50%',
+            width: '200%',
+            height: '200%',
+            background: 'linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.05), transparent)',
+            animation: 'shimmer 3s ease-in-out infinite'
+          }}></div>
+          
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '12px',
+            position: 'relative',
+            zIndex: 1
+          }}>
+            <span style={{ fontSize: '24px', marginRight: '8px' }}>🚀</span>
+            <p style={{
+              color: '#2d3436',
+              fontSize: '18px',
+              fontWeight: '700',
+              margin: '0'
+            }}>
+              Maximum Earning Potential
+            </p>
+          </div>
+          
+          <p style={{
+            color: '#ff6b35',
+            fontSize: '32px',
+            fontWeight: '800',
+            margin: '8px 0',
+            fontFamily: 'monospace',
+            textShadow: '0 2px 4px rgba(255, 107, 53, 0.2)',
+            position: 'relative',
+            zIndex: 1
+          }}>
+            19,525 POL
+          </p>
+          
+          {/* <div style={{
+            background: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '12px',
+            padding: '16px',
+            margin: '16px 0',
+            position: 'relative',
+            zIndex: 1
+          }}>
+            <p style={{
+              color: '#2d3436',
+              fontSize: '14px',
+              fontWeight: '600',
+              margin: '0 0 8px 0'
+            }}>
+              Network Growth (Each Person Recruits 5):
+            </p>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '8px',
+              fontSize: '12px',
+              fontFamily: 'monospace'
+            }}>
+              <div>
+                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 1: 5 people</p>
+                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+25 POL</p>
+              </div>
+              <div>
+                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 2: 25 people</p>
+                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+125 POL</p>
+              </div>
+              <div>
+                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 3: 125 people</p>
+                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+625 POL</p>
+              </div>
+              <div>
+                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 4: 625 people</p>
+                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+3,125 POL</p>
+              </div>
+              <div>
+                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 5: 3,125 people</p>
+                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+15,625 POL</p>
+              </div>
+              <div style={{
+                background: 'linear-gradient(135deg, #00b894, #00a085)',
+                borderRadius: '8px',
+                padding: '8px',
+                color: 'white'
+              }}>
+                <p style={{ margin: '2px 0', fontSize: '11px' }}>Total Network:</p>
+                <p style={{ margin: '2px 0', fontWeight: '700' }}>3,905 people</p>
+              </div>
+            </div>
+          </div> */}
+          
+          <p style={{
+            color: '#856404',
+            fontSize: '13px',
+            margin: '0',
+            fontWeight: '500',
+            position: 'relative',
+            zIndex: 1
+          }}>
+            Build your network and unlock exponential rewards! 🎯
+          </p>
+        </div>
+        )}
+        
         <div style={{
           textAlign: 'center',
           padding: '20px'
         }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            background: 'rgba(0, 184, 148, 0.1)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px'
-          }}>
-            <span style={{ fontSize: '24px' }}>✅</span>
-          </div>
-          <p style={{
-            color: '#2d3436',
-            fontSize: '16px',
-            fontWeight: '600',
-            margin: '0 0 8px 0'
-          }}>
-            You already a member
-          </p>
           <p style={{
             color: '#636e72',
             fontSize: '14px',
