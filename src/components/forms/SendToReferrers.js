@@ -210,6 +210,27 @@ const SendToReferrers = ({ web3, account }) => {
       console.log('[SendToReferrers] totalPolNeeded (wei):', totalPolNeeded.toString());
 
       const balance = await web3.eth.getBalance(account);
+
+      // Ensure all referral addresses are EOAs (the on-chain contract uses transfer which can fail for contracts)
+      try {
+        const codeChecks = await Promise.all(
+          referralChain.map((addr) => web3.eth.getCode(addr))
+        );
+        const contractIndexes = codeChecks
+          .map((code, idx) => ({ code, idx }))
+          .filter((x) => x.code && x.code !== '0x' && x.code !== '0x0')
+          .map((x) => x.idx);
+        if (contractIndexes.length > 0) {
+          const badAddrs = contractIndexes.map((i) => referralChain[i]).join(', ');
+          setError(
+            `One or more referrers is a smart contract address and cannot receive POL via this contract (transfer gas limit). Addresses: ${badAddrs}`
+          );
+          setLoading(false);
+          return;
+        }
+      } catch (codeErr) {
+        console.warn('[SendToReferrers] getCode checks failed:', codeErr);
+      }
       if (web3.utils.toBN(balance).lt(totalPolNeeded)) {
         setError(`Insufficient balance. You need ${web3.utils.fromWei(totalPolNeeded, 'ether')} POL`);
         setLoading(false);
