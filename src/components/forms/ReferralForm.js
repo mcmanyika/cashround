@@ -35,9 +35,18 @@ const getAllReferrers = async (contract, userAddress) => {
 const ReferralForm = ({ web3, account, setIsMember }) => {
   const router = useRouter();
   const activeWallet = useActiveWallet();
-  const { priceData, loading: priceLoading, calculateUSDValue, formatPrice } = usePriceContext();
+  const { priceData, loading: priceLoading, calculateUSDValue, formatPrice, price } = usePriceContext();
   const [referrerAddress, setReferrerAddress] = useState('');
-  const [polAmount, setPolAmount] = useState('5');
+  
+  // Calculate POL amount equivalent to $5 USD
+  const calculatePOLFor5USD = () => {
+    if (!priceData || !priceData.price || priceData.price === 0) {
+      return '5.00'; // Fallback amount
+    }
+    return (5 / priceData.price).toFixed(2); // 2 decimal places
+  };
+  
+  const polAmount = calculatePOLFor5USD();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -259,7 +268,6 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
 
       toast.success('Successfully joined the referral tree!');
       setReferrerAddress('');
-      setPolAmount('');
       setShowBecomeMember(true);
       
       // Redirect to SendToReferrers component after successful submission
@@ -480,16 +488,6 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             (19,525 POL at current rate)
           </p>
           
-          <p style={{
-            color: '#856404',
-            fontSize: '13px',
-            margin: '0',
-            fontWeight: '500',
-            position: 'relative',
-            zIndex: 1
-          }}>
-            Build your network and unlock exponential rewards! 🎯
-          </p>
         </div>
         )}
         
@@ -596,12 +594,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           />
         </div>
 
-        {/* Hidden amount field */}
-        <input
-          type="hidden"
-          value={polAmount}
-          onChange={(e) => setPolAmount(e.target.value)}
-        />
+        {/* Amount is automatically calculated as $5 USD equivalent */}
 
         <button
           type="submit"

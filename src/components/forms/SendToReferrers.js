@@ -13,7 +13,16 @@ const SendToReferrers = ({ web3, account }) => {
   const [error, setError] = useState('');
   const [networkId, setNetworkId] = useState(null);
   const [hasPaid, setHasPaid] = useState(false);
-  const [polAmountPerMember, setPolAmountPerMember] = useState('5');
+  
+  // Calculate POL amount equivalent to $5 USD per member
+  const calculatePOLFor5USD = () => {
+    if (!priceData || !priceData.price || priceData.price === 0) {
+      return '5.00'; // Fallback amount
+    }
+    return (5 / priceData.price).toFixed(2); // 2 decimal places
+  };
+  
+  const polAmountPerMember = calculatePOLFor5USD();
   const [contract, setContract] = useState(null);
   const [referralChain, setReferralChain] = useState([]);
   const [isMember, setIsMember] = useState(false);
@@ -179,10 +188,7 @@ const SendToReferrers = ({ web3, account }) => {
       return;
     }
 
-    if (!polAmountPerMember || isNaN(polAmountPerMember) || parseFloat(polAmountPerMember) <= 0) {
-      setError('Please enter a valid POL amount per member');
-      return;
-    }
+    // POL amount is automatically calculated as $5 USD equivalent
 
     if (referralChain.length === 0) {
       setError('No referrers found in your chain');
@@ -377,44 +383,40 @@ const SendToReferrers = ({ web3, account }) => {
             <div style={{
               marginBottom: '24px'
             }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#2d3436',
-                marginBottom: '8px',
-                textAlign: 'left'
+              <div style={{
+                background: 'rgba(0, 184, 148, 0.1)',
+                border: '2px solid rgba(0, 184, 148, 0.2)',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                textAlign: 'center',
+                marginBottom: '8px'
               }}>
-              </label>
-              <input
-                type="hidden"
-                step="0.001"
-                min="0"
-                style={{
-                  width: '100%',
-                  padding: '16px 20px',
-                  border: '2px solid #e9ecef',
-                  borderRadius: '16px',
-                  fontSize: '16px',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'transparent',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                }}
-                value={polAmountPerMember}
-                onChange={(e) => setPolAmountPerMember(e.target.value)}
-                placeholder="Enter POL amount per referrer"
-                required
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#00b894';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(0, 184, 148, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e9ecef';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
-                }}
-              />
+                <p style={{
+                  color: '#2d3436',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  margin: '0 0 4px 0'
+                }}>
+                  Payment Amount (Fixed at $5.00 USD)
+                </p>
+                <p style={{
+                  color: '#00b894',
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  margin: '0',
+                  fontFamily: 'monospace'
+                }}>
+                  {parseFloat(polAmountPerMember).toFixed(2)} POL per referrer
+                </p>
+                <p style={{
+                  color: '#636e72',
+                  fontSize: '12px',
+                  margin: '4px 0 0 0',
+                  opacity: '0.8'
+                }}>
+                  Live rate: ${formatPrice(4)} POL/USD
+                </p>
+              </div>
             </div>
 
             <div style={{
@@ -465,7 +467,7 @@ const SendToReferrers = ({ web3, account }) => {
 
             <button
               onClick={handleSendToReferrers}
-              disabled={loading || !polAmountPerMember}
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: '18px 24px',
