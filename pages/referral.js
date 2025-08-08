@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import ReferralForm from '../src/components/forms/ReferralForm';
 import { useActiveWallet, useActiveAccount } from "thirdweb/react";
 import { LayoutWithHeader, LayoutLoading } from '../src/components/layout/Layout';
+import { PriceProvider } from '../src/contexts/PriceContext';
 
 export default function ReferralPage() {
   const router = useRouter();
@@ -45,8 +46,10 @@ export default function ReferralPage() {
   }
 
   return (
-    <LayoutWithHeader showSignout={true} isMember={isMember}>
-      <ReferralForm web3={web3} account={account} setIsMember={setIsMember} />
-    </LayoutWithHeader>
+    <PriceProvider>
+      <LayoutWithHeader showSignout={true} isMember={isMember}>
+        <ReferralForm web3={web3} account={account} setIsMember={setIsMember} />
+      </LayoutWithHeader>
+    </PriceProvider>
   );
 }

@@ -4,9 +4,11 @@ import TreeContract from '../../abis/Tree.json';
 import { toast } from 'react-toastify';
 import { LayoutWithHeader } from '../layout/Layout';
 import { getContractAddress, isNetworkSupported } from '../../config/contractConfig';
+import { usePriceContext } from '../../contexts/PriceContext';
 
 const SendToReferrers = ({ web3, account }) => {
   const router = useRouter();
+  const { priceData, loading: priceLoading, calculateUSDValue, formatPrice } = usePriceContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [networkId, setNetworkId] = useState(null);
@@ -208,7 +210,7 @@ const SendToReferrers = ({ web3, account }) => {
           value: totalPolNeeded.toString()
         });
 
-      toast.success(`✅ Successfully sent ${polAmountPerMember} POL to ${referralChain.length} referrers!`);
+      toast.success(`✅ Successfully sent $${calculateUSDValue(polAmountPerMember)} (${polAmountPerMember} POL) to ${referralChain.length} referrers!`);
       setHasPaid(true);
     } catch (err) {
       if (err.code === 4001) {
@@ -402,7 +404,7 @@ const SendToReferrers = ({ web3, account }) => {
                 }}
                 value={polAmountPerMember}
                 onChange={(e) => setPolAmountPerMember(e.target.value)}
-                placeholder="Enter amount per referrer"
+                placeholder="Enter POL amount per referrer"
                 required
                 onFocus={(e) => {
                   e.target.style.borderColor = '#00b894';
@@ -455,9 +457,9 @@ const SendToReferrers = ({ web3, account }) => {
                 fontSize: '14px',
                 margin: '0'
               }}>
-                • Amount per referrer: {polAmountPerMember} POL
+                • Amount per referrer: ${calculateUSDValue(polAmountPerMember)} ({polAmountPerMember} POL)
                 <br />
-                • Total: {polAmountPerMember * referralChain.length} POL
+                • Total: ${calculateUSDValue(polAmountPerMember * referralChain.length)} ({polAmountPerMember * referralChain.length} POL)
               </p>
             </div>
 

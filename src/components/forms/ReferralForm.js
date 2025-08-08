@@ -4,6 +4,7 @@ import TreeContract from '../../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet } from 'thirdweb/react';
 import { getContractAddress, isNetworkSupported } from '../../config/contractConfig';
+import { usePriceContext } from '../../contexts/PriceContext';
 
 // Helper function to get all referrers in the entire tree
 const getAllReferrers = async (contract, userAddress) => {
@@ -34,8 +35,9 @@ const getAllReferrers = async (contract, userAddress) => {
 const ReferralForm = ({ web3, account, setIsMember }) => {
   const router = useRouter();
   const activeWallet = useActiveWallet();
+  const { priceData, loading: priceLoading, calculateUSDValue, formatPrice } = usePriceContext();
   const [referrerAddress, setReferrerAddress] = useState('');
-  const [ethAmount, setEthAmount] = useState('5');
+  const [polAmount, setPolAmount] = useState('5');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -209,7 +211,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
       }
     };
     checkMembership();
-  }, [contract, account, router]);
+  }, [contract, account, router, setIsMember, web3]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -223,8 +225,8 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
       return;
     }
 
-    if (!ethAmount || isNaN(ethAmount) || parseFloat(ethAmount) <= 0) {
-      toast.error('Please enter a valid ETH amount');
+    if (!polAmount || isNaN(polAmount) || parseFloat(polAmount) <= 0) {
+      toast.error('Please enter a valid POL amount');
       return;
     }
 
@@ -249,15 +251,15 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
         return;
       }
 
-      const ethAmountWei = web3.utils.toWei(ethAmount, 'ether');
+      const polAmountWei = web3.utils.toWei(polAmount, 'ether');
 
       // Call the enter function
       await contract.methods.enter(referrerAddress, referrerAddress)
-        .send({ from: account, value: ethAmountWei });
+        .send({ from: account, value: polAmountWei });
 
       toast.success('Successfully joined the referral tree!');
       setReferrerAddress('');
-      setEthAmount('');
+      setPolAmount('');
       setShowBecomeMember(true);
       
       // Redirect to SendToReferrers component after successful submission
@@ -336,7 +338,53 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           </div>
         )}
         
-        {/* Referral Chain Display */}
+        {/* 1. Total Amount Received Display */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(0, 184, 148, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%)',
+          border: '1px solid rgba(0, 184, 148, 0.2)',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '8px'
+          }}>
+            <span style={{ fontSize: '20px', marginRight: '8px' }}>💰</span>
+            <p style={{
+              color: '#2d3436',
+              fontSize: '16px',
+              fontWeight: '600',
+              margin: '0'
+            }}>
+              Total Amount Received
+            </p>
+          </div>
+          <p style={{
+            color: '#00b894',
+            fontSize: '32px',
+            fontWeight: '700',
+            margin: '0',
+            fontFamily: 'monospace'
+          }}>
+            ${calculateUSDValue(totalAmountReceived)}
+          </p>
+          <p style={{
+            color: '#636e72',
+            fontSize: '12px',
+            margin: '8px 0 0 0',
+            opacity: '0.8'
+          }}>
+            From referral rewards ({parseFloat(totalAmountReceived).toFixed(2)} POL) {priceData && (
+              <span>• Live rate: ${formatPrice(4)}</span>
+            )}
+          </p>
+        </div>
+
+        {/* 2. Referral Chain Display */}
         {referralChain.length > 0 && (
           <div style={{
             background: '#f8f9fa',
@@ -365,52 +413,8 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             ))}
           </div>
         )}
-        
-        {/* Total Amount Received Display */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(0, 184, 148, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%)',
-          border: '1px solid rgba(0, 184, 148, 0.2)',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '20px',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '8px'
-          }}>
-            <span style={{ fontSize: '20px', marginRight: '8px' }}>💰</span>
-            <p style={{
-              color: '#2d3436',
-              fontSize: '16px',
-              fontWeight: '600',
-              margin: '0'
-            }}>
-              Total Amount Received
-            </p>
-          </div>
-          <p style={{
-            color: '#00b894',
-            fontSize: '24px',
-            fontWeight: '700',
-            margin: '0',
-            fontFamily: 'monospace'
-          }}>
-            {parseFloat(totalAmountReceived).toFixed(2)} POL
-          </p>
-          <p style={{
-            color: '#636e72',
-            fontSize: '12px',
-            margin: '8px 0 0 0',
-            opacity: '0.8'
-          }}>
-            From referral rewards
-          </p>
-        </div>
-        
-        {/* Potential Earnings Calculator - Hidden for contract owner */}
+
+        {/* 3. Maximum Earning Potential - Hidden for contract owner */}
         {!isContractOwner && (
         <div style={{
           background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%)',
@@ -453,7 +457,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           
           <p style={{
             color: '#ff6b35',
-            fontSize: '32px',
+            fontSize: '42px',
             fontWeight: '800',
             margin: '8px 0',
             fontFamily: 'monospace',
@@ -461,63 +465,20 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             position: 'relative',
             zIndex: 1
           }}>
-            19,525 POL
+            ${calculateUSDValue('19525')}
           </p>
           
-          {/* <div style={{
-            background: 'rgba(255, 255, 255, 0.8)',
-            borderRadius: '12px',
-            padding: '16px',
-            margin: '16px 0',
+          <p style={{
+            color: '#636e72',
+            fontSize: '14px',
+            fontWeight: '500',
+            margin: '4px 0 8px 0',
+            opacity: '0.8',
             position: 'relative',
             zIndex: 1
           }}>
-            <p style={{
-              color: '#2d3436',
-              fontSize: '14px',
-              fontWeight: '600',
-              margin: '0 0 8px 0'
-            }}>
-              Network Growth (Each Person Recruits 5):
-            </p>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '8px',
-              fontSize: '12px',
-              fontFamily: 'monospace'
-            }}>
-              <div>
-                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 1: 5 people</p>
-                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+25 POL</p>
-              </div>
-              <div>
-                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 2: 25 people</p>
-                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+125 POL</p>
-              </div>
-              <div>
-                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 3: 125 people</p>
-                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+625 POL</p>
-              </div>
-              <div>
-                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 4: 625 people</p>
-                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+3,125 POL</p>
-              </div>
-              <div>
-                <p style={{ margin: '2px 0', color: '#636e72' }}>Level 5: 3,125 people</p>
-                <p style={{ margin: '2px 0', color: '#00b894', fontWeight: '600' }}>+15,625 POL</p>
-              </div>
-              <div style={{
-                background: 'linear-gradient(135deg, #00b894, #00a085)',
-                borderRadius: '8px',
-                padding: '8px',
-                color: 'white'
-              }}>
-                <p style={{ margin: '2px 0', fontSize: '11px' }}>Total Network:</p>
-                <p style={{ margin: '2px 0', fontWeight: '700' }}>3,905 people</p>
-              </div>
-            </div>
-          </div> */}
+            (19,525 POL at current rate)
+          </p>
           
           <p style={{
             color: '#856404',
@@ -638,8 +599,8 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
         {/* Hidden amount field */}
         <input
           type="hidden"
-          value={ethAmount}
-          onChange={(e) => setEthAmount(e.target.value)}
+          value={polAmount}
+          onChange={(e) => setPolAmount(e.target.value)}
         />
 
         <button
