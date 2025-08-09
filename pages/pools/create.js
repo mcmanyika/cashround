@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { LayoutWithHeader } from '../../src/components/layout/Layout';
-import { getWeb3, getFactory } from '../../src/rosca/services/rosca';
+import { getWeb3, getWeb3FromThirdwebWallet, getFactory, hasTwoLevelDownline, isTreeOwner } from '../../src/rosca/services/rosca';
 import { getDefaultUsdcForChain } from '../../src/rosca/config/tokens';
+import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_POOL_FACTORY_ADDRESS || '';
 
 export default function CreatePool() {
   const router = useRouter();
+  const activeWallet = useActiveWallet();
+  const activeAccount = useActiveAccount();
   const [web3, setWeb3] = useState(null);
   const [account, setAccount] = useState('');
   const [factory, setFactory] = useState(null);
@@ -20,21 +23,23 @@ export default function CreatePool() {
   const [mounted, setMounted] = useState(false);
   const [orderCsv, setOrderCsv] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [eligible, setEligible] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const w3 = await getWeb3();
+      let w3 = await getWeb3FromThirdwebWallet(activeWallet);
+      if (!w3) w3 = await getWeb3();
       if (!w3) {
         toast.error('Please install MetaMask');
         return;
       }
       setWeb3(w3);
-      const accounts = await w3.eth.requestAccounts();
-      if (!accounts || accounts.length === 0) {
+      const acct = activeAccount?.address || (await w3.eth.requestAccounts())[0];
+      if (!acct) {
         toast.error('Please connect your wallet');
         return router.push('/');
       }
-      setAccount(accounts[0]);
+      setAccount(acct);
       try {
         const netId = await w3.eth.net.getId();
         const suggested = getDefaultUsdcForChain(netId);
@@ -45,6 +50,14 @@ export default function CreatePool() {
         return;
       }
       setFactory(getFactory(w3, FACTORY_ADDRESS));
+      // Check eligibility (Tree creator OR needs 2-level downline)
+      try {
+        const [owner, depth] = await Promise.all([
+          isTreeOwner(w3, acct),
+          hasTwoLevelDownline(w3, acct)
+        ]);
+        setEligible(Boolean(owner || depth));
+      } catch { setEligible(false); }
       // Set default start time on client to avoid SSR hydration drift
       try {
         setMounted(true);
@@ -53,7 +66,7 @@ export default function CreatePool() {
         }
       } catch {}
     })();
-  }, []);
+  }, [activeWallet, activeAccount?.address]);
 
   const create = async () => {
     if (!web3 || !factory || !account) return;
@@ -236,23 +249,23 @@ export default function CreatePool() {
           </div>
 
           <button
-            disabled={processing}
+            disabled={processing || !eligible}
             onClick={create}
             style={{
               width: '100%',
               padding: '14px 18px',
-              background: processing ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+              background: (processing || !eligible) ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
               border: 'none',
               borderRadius: 12,
               color: 'white',
               fontSize: 16,
               fontWeight: 700,
-              cursor: processing ? 'not-allowed' : 'pointer',
+              cursor: (processing || !eligible) ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s ease',
               boxShadow: '0 4px 12px rgba(0, 184, 148, 0.25)'
             }}
           >
-            {processing ? 'Processing...' : 'Create Pool'}
+            {processing ? 'Processing...' : eligible ? 'Create Pool' : 'Not Eligible'}
           </button>
         </div>
       </div>

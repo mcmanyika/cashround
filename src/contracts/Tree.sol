@@ -25,6 +25,8 @@ contract Tree {
     );
 
     mapping(address => User) public tree;
+    // Track direct children for each member to enable downline queries
+    mapping(address => address[]) public children;
     address public top;
     mapping(address => bool) public hasPaidUpliners;
 
@@ -55,12 +57,27 @@ contract Tree {
         // Effects: Update state variables
         Count++;
         tree[msg.sender] = User(_inviter, msg.sender);
+        // Track downline
+        children[_inviter].push(msg.sender);
 
         // Interaction: External call
         (bool sent, ) = payable(top).call{value: msg.value}("");
         require(sent, "Failed to send Ether");
 
         emit Summary(msg.sender, _inviter, _subscription, Count);
+    }
+
+    // View helper to check if an address has at least two levels of downliners:
+    // at least one direct child, and at least one grandchild through any child.
+    function hasTwoLevelDownline(address member) external view returns (bool) {
+        address[] memory lvl1 = children[member];
+        if (lvl1.length == 0) return false;
+        for (uint256 i = 0; i < lvl1.length; i++) {
+            if (children[lvl1[i]].length > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function pay(address _member)

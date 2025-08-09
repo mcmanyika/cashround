@@ -10,6 +10,21 @@ export const getWeb3 = async () => {
   return web3;
 };
 
+// Prefer thirdweb wallet when available (supports in-app wallets that do not inject window.ethereum)
+export const getWeb3FromThirdwebWallet = async (wallet) => {
+  try {
+    if (!wallet) return null;
+    if (typeof wallet.getEthereumProvider === 'function') {
+      const provider = await wallet.getEthereumProvider();
+      return new Web3(provider);
+    }
+    // Fallback: no compatible provider method
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 export const getAccounts = async (web3) => {
   const accounts = await web3.eth.requestAccounts();
   return accounts;
@@ -40,6 +55,29 @@ export const isTreeOwner = async (web3, account) => {
     if (!tree || !account) return false;
     const top = await tree.methods.top().call();
     return top.toLowerCase() === account.toLowerCase();
+  } catch {
+    return false;
+  }
+};
+
+export const hasTwoLevelDownline = async (web3, account) => {
+  try {
+    const tree = await getTree(web3);
+    if (!tree || !account) return false;
+    const eligible = await tree.methods.hasTwoLevelDownline(account).call();
+    return Boolean(eligible);
+  } catch {
+    return false;
+  }
+};
+
+export const isTreeMember = async (web3, account) => {
+  try {
+    const tree = await getTree(web3);
+    if (!tree || !account) return false;
+    const data = await tree.methods.tree(account).call();
+    const zero = '0x0000000000000000000000000000000000000000';
+    return data.inviter && data.inviter !== zero;
   } catch {
     return false;
   }

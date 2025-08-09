@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ToastContainer, toast } from 'react-toastify';
 import { LayoutWithHeader } from '../../src/components/layout/Layout';
-import { getWeb3, getRoscaPool, getErc20, isTreeOwner } from '../../src/rosca/services/rosca';
+import { getWeb3, getRoscaPool, getErc20, hasTwoLevelDownline, isTreeOwner } from '../../src/rosca/services/rosca';
 
 export default function PoolDetail() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function PoolDetail() {
   const [decimals, setDecimals] = useState(6); // USDC default
   const [loading, setLoading] = useState(true);
   const [isContributing, setIsContributing] = useState(false);
-  const [allowed, setAllowed] = useState(false);
+  const [eligible, setEligible] = useState(false);
 
   useEffect(() => {
     if (!address) return;
@@ -37,11 +37,22 @@ export default function PoolDetail() {
           return;
         }
         setAccount(accounts[0]);
-        const owner = await isTreeOwner(w3, accounts?.[0]);
-        setAllowed(owner);
+        const [owner, depth] = await Promise.all([
+          isTreeOwner(w3, accounts?.[0]),
+          hasTwoLevelDownline(w3, accounts?.[0])
+        ]);
+        setEligible(Boolean(owner || depth));
         const p = getRoscaPool(w3, address);
         setPool(p);
-        const [tok, size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt] = await p.methods.poolInfo().call();
+        const poolInfo = await p.methods.poolInfo().call();
+        const tok = poolInfo.token || poolInfo[0];
+        const size = poolInfo.size || poolInfo[1];
+        const contribution = poolInfo.contribution || poolInfo[2];
+        const roundDuration = poolInfo.roundDuration || poolInfo[3];
+        const startTime = poolInfo.startTime || poolInfo[4];
+        const currentRound = poolInfo.currentRound || poolInfo[5];
+        const currentRecipient = poolInfo.currentRecipient || poolInfo[6];
+        const roundEndsAt = poolInfo.roundEndsAt || poolInfo[7];
         const ord = await p.methods.getPayoutOrder().call();
         setToken(tok);
         setInfo({ size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt });
@@ -115,6 +126,16 @@ export default function PoolDetail() {
     }
   };
 
+  const shorten = (addr) => {
+    if (!addr) return '';
+    const s = String(addr);
+    if (s.length <= 12) return s;
+    if (s.startsWith('0x') && s.length > 12) {
+      return `${s.slice(0, 6)}...${s.slice(-4)}`;
+    }
+    return `${s.slice(0, 6)}...${s.slice(-4)}`;
+  };
+
   const cardStyle = {
     maxWidth: 640,
     margin: '0 auto',
@@ -124,39 +145,53 @@ export default function PoolDetail() {
     boxShadow: '0 10px 30px rgba(0,0,0,0.06)'
   };
 
-  const rowStyle = { display: 'grid', gridTemplateColumns: '180px 1fr', gap: 12, marginBottom: 10 };
-  const keyStyle = { color: '#636e72', fontSize: 13 };
-  const valStyle = { color: '#2d3436', fontFamily: 'monospace', fontSize: 14 };
+  const rowStyle = {
+    display: 'grid',
+    gridTemplateColumns: '160px 1fr',
+    gap: 12,
+    marginBottom: 10,
+    alignItems: 'start'
+  };
+  const keyStyle = { color: '#636e72', fontSize: 13, lineHeight: '20px' };
+  const valStyle = {
+    color: '#2d3436',
+    fontFamily: 'monospace',
+    fontSize: 13,
+    lineHeight: '18px',
+    wordBreak: 'break-all',
+    overflowWrap: 'anywhere',
+    whiteSpace: 'normal'
+  };
 
   return (
     <LayoutWithHeader showSignout={true}>
       <ToastContainer position="top-center" />
       <div style={cardStyle}>
         <h3 style={{ marginTop: 0, marginBottom: 8, color: '#2d3436' }}>Pool</h3>
-        <p style={{ marginTop: 0, color: '#9aa0a6', fontSize: 12 }}>{address}</p>
+        <p style={{ marginTop: 0, color: '#9aa0a6', fontSize: 12 }} title={address}>{shorten(address)}</p>
         {loading || !info ? (
           <p>Loading...</p>
-        ) : !allowed ? (
-          <p style={{ color: '#e67e22' }}>Access restricted. Only the Tree contract creator can view this pool.</p>
         ) : (
           <>
-            <div style={rowStyle}><div style={keyStyle}>Token</div><div style={valStyle}>{token}</div></div>
+            {!eligible && (
+              <p style={{ color: '#e67e22', marginBottom: 12 }}>You can view this pool, but you need at least 2 levels of downliners to contribute or trigger payouts.</p>
+            )}
+            <div style={rowStyle}><div style={keyStyle}>Token</div><div style={valStyle} title={token}>{shorten(token)}</div></div>
             <div style={rowStyle}><div style={keyStyle}>Size</div><div style={valStyle}>{info.size}</div></div>
             <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)}</div></div>
             <div style={rowStyle}><div style={keyStyle}>Current round</div><div style={valStyle}>{Number(info.currentRound)}</div></div>
-            <div style={rowStyle}><div style={keyStyle}>Current recipient</div><div style={valStyle}>{info.currentRecipient}</div></div>
-            <div style={{ margin: '16px 0' }}>
-              <button disabled={isContributing} onClick={approveAndContribute} style={{
-                marginRight: 12,
+            <div style={rowStyle}><div style={keyStyle}>Current recipient</div><div style={valStyle} title={info.currentRecipient}>{shorten(info.currentRecipient)}</div></div>
+            <div style={{ margin: '16px 0', display: 'grid', gap: 12 }}>
+              <button disabled={isContributing || !eligible} onClick={approveAndContribute} style={{
                 padding: '10px 14px',
-                background: isContributing ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+                background: (isContributing || !eligible) ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
                 border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
               }}>
                 {isContributing ? 'Processing...' : 'Approve & Contribute'}
               </button>
-              <button disabled={isContributing} onClick={triggerPayout} style={{
+              <button disabled={isContributing || !eligible} onClick={triggerPayout} style={{
                 padding: '10px 14px',
-                background: isContributing ? '#e9ecef' : 'linear-gradient(135deg, #00cec9 0%, #00b894 100%)',
+                background: (isContributing || !eligible) ? '#e9ecef' : 'linear-gradient(135deg, #00cec9 0%, #00b894 100%)',
                 border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
               }}>
                 {isContributing ? 'Processing...' : 'Trigger Payout'}
@@ -166,7 +201,7 @@ export default function PoolDetail() {
               <p style={{ color: '#2d3436', fontWeight: 600 }}>Payout order</p>
               <ol style={{ marginTop: 8 }}>
                 {order.map((m) => (
-                  <li key={m} style={{ fontFamily: 'monospace', fontSize: 14 }}>{m}</li>
+                  <li key={m} title={m} style={{ fontFamily: 'monospace', fontSize: 13, wordBreak: 'break-all', overflowWrap: 'anywhere', lineHeight: '18px' }}>{shorten(m)}</li>
                 ))}
               </ol>
             </div>

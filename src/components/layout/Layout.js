@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useActiveWallet, useActiveAccount, ConnectButton } from 'thirdweb/react';
 import Link from 'next/link';
-import { getWeb3, isTreeOwner } from '../../rosca/services/rosca';
+import { getWeb3, isTreeMember } from '../../rosca/services/rosca';
 import { lightTheme } from 'thirdweb/react';
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 
@@ -81,21 +81,21 @@ export const LayoutLoading = ({ className = '' }) => (
 export const LayoutSignout = ({ className = '' }) => {
   const activeWallet = useActiveWallet();
   const activeAccount = useActiveAccount();
-  const [allowed, setAllowed] = useState(false);
+  const [showPools, setShowPools] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const w3 = await getWeb3();
         const addr = activeAccount?.address;
-        if (w3 && addr) {
-          const owner = await isTreeOwner(w3, addr);
-          setAllowed(owner);
+        const w3 = await getWeb3();
+        if (addr && w3) {
+          const member = await isTreeMember(w3, addr);
+          setShowPools(member);
         } else {
-          setAllowed(false);
+          setShowPools(false);
         }
       } catch {
-        setAllowed(false);
+        setShowPools(false);
       }
     })();
   }, [activeAccount?.address]);
@@ -112,7 +112,7 @@ export const LayoutSignout = ({ className = '' }) => {
     <div
       style={{
         position: 'absolute',
-        bottom: '30px',
+        top: '16px',
         right: '20px',
         display: 'flex',
         alignItems: 'center',
@@ -120,15 +120,17 @@ export const LayoutSignout = ({ className = '' }) => {
         zIndex: 1000,
       }}
     >
-      {allowed && (
+      {showPools && (
         <Link
           href="/pools"
           style={{
             color: '#00b894',
             fontSize: '14px',
-            fontWeight: 600,
+            fontWeight: 700,
             textDecoration: 'none',
-            padding: '10px',
+            padding: '8px 10px',
+            background: 'rgba(0, 184, 148, 0.08)',
+            borderRadius: 8,
           }}
         >
           Pools
@@ -142,7 +144,9 @@ export const LayoutSignout = ({ className = '' }) => {
           cursor: 'pointer',
           color: '#636e72',
           fontSize: '14px',
-          padding: '10px',
+          padding: '8px 10px',
+          background: 'rgba(99, 110, 114, 0.06)',
+          borderRadius: 8,
         }}
       >
         Signout
