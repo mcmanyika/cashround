@@ -3,14 +3,18 @@ import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { toast } from 'react-toastify';
 import { LayoutWithHeader } from '../layout/Layout';
+// Removed imports for missing files after git reset
 
 const SendToReferrers = ({ web3, account }) => {
   const router = useRouter();
+  // Removed price context usage after git reset
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [networkId, setNetworkId] = useState(null);
   const [hasPaid, setHasPaid] = useState(false);
-  const [ethAmountPerMember, setEthAmountPerMember] = useState('5');
+  
+  // Fixed amount per referrer (ETH)
+  const ethAmountPerMember = '1';
   const [contract, setContract] = useState(null);
   const [referralChain, setReferralChain] = useState([]);
   const [isMember, setIsMember] = useState(false);
@@ -38,27 +42,38 @@ const SendToReferrers = ({ web3, account }) => {
 
   useEffect(() => {
     const initialize = async () => {
-      if (web3) {
-        try {
-          const networkId = await web3.eth.net.getId();
-          const networkData = TreeContract.networks[networkId];
-          setNetworkId(networkId);
-          
-          if (networkData && networkData.address) {
-            const contractInstance = new web3.eth.Contract(
-              TreeContract.abi,
-              networkData.address
-            );
-            setContract(contractInstance);
-            console.log('Contract initialized at:', networkData.address);
-          } else {
-            console.error('No contract found on network:', networkId);
-            setError(`No contract found on network ${networkId}`);
-          }
-        } catch (error) {
-          console.error('Error initializing contract:', error);
-          setError('Error connecting to blockchain');
+      if (!web3) return;
+      try {
+        const detectedNetworkId = await web3.eth.net.getId();
+        setNetworkId(detectedNetworkId);
+
+        // Known addresses per network
+        const addressBook = {
+          80002: '0xFD2FaC399ddc9966070514ED87269aee9A93a824', // Polygon Amoy (Amon testnet)
+          137: '0xa1268396c94543f42238accfaee9776fce12a52a',   // Polygon Mainnet
+          5777: TreeContract.networks?.[5777]?.address,
+          1337: TreeContract.networks?.[1337]?.address
+        };
+
+        const networkData = TreeContract.networks?.[detectedNetworkId];
+        const contractAddress = addressBook[detectedNetworkId] || networkData?.address;
+
+        if (!contractAddress) {
+          console.error('No contract found on network:', detectedNetworkId);
+          setError(`No contract found on network ${detectedNetworkId}. Please switch to Polygon Amoy (80002) or Polygon Mainnet (137).`);
+          setContract(null);
+          return;
         }
+
+        const contractInstance = new web3.eth.Contract(
+          TreeContract.abi,
+          contractAddress
+        );
+        setContract(contractInstance);
+        console.log('Contract initialized at:', contractAddress, 'on network', detectedNetworkId);
+      } catch (error) {
+        console.error('Error initializing contract:', error);
+        setError('Error connecting to blockchain');
       }
     };
     initialize();
@@ -146,9 +161,13 @@ const SendToReferrers = ({ web3, account }) => {
               setDebugInfo(`Found ${referralChain.length} referrers in chain`);
             } else {
               console.log('User is not a member');
+              console.log('User data details:');
+              console.log('- Inviter:', userData.inviter);
+              console.log('- Self:', userData.self);
+              console.log('- Is inviter zero address?', userData.inviter === '0x0000000000000000000000000000000000000000');
               setIsMember(false);
               setReferralChain([]);
-              setDebugInfo('User is not a member of the tree');
+              setDebugInfo(`User is not a member. Inviter: ${userData.inviter}`);
             }
           } catch (treeError) {
             console.log('Error checking tree data:', treeError);
@@ -175,10 +194,7 @@ const SendToReferrers = ({ web3, account }) => {
       return;
     }
 
-    if (!ethAmountPerMember || isNaN(ethAmountPerMember) || parseFloat(ethAmountPerMember) <= 0) {
-      setError('Please enter a valid ETH amount per member');
-      return;
-    }
+    // ETH amount is fixed at 0.001 ETH
 
     if (referralChain.length === 0) {
       setError('No referrers found in your chain');
@@ -189,21 +205,79 @@ const SendToReferrers = ({ web3, account }) => {
     setError('');
 
     try {
+      // Debug values and compute totals
+      console.log('[SendToReferrers] ethAmountPerMember (ETH):', ethAmountPerMember);
       const ethAmountWei = web3.utils.toWei(ethAmountPerMember, 'ether');
-      const totalEthNeeded = web3.utils.toBN(ethAmountWei).mul(web3.utils.toBN(referralChain.length));
+      const totalEthNeeded = web3.utils
+        .toBN(ethAmountWei)
+        .mul(web3.utils.toBN(referralChain.length));
+      console.log('[SendToReferrers] ethAmountWei:', ethAmountWei);
+      console.log('[SendToReferrers] referralChain.length:', referralChain.length);
+      console.log('[SendToReferrers] totalEthNeeded (wei):', totalEthNeeded.toString());
+
       const balance = await web3.eth.getBalance(account);
-      
+
+      // Ensure all referral addresses are EOAs (the on-chain contract uses transfer which can fail for contracts)
+      try {
+        const codeChecks = await Promise.all(
+          referralChain.map((addr) => web3.eth.getCode(addr))
+        );
+        const contractIndexes = codeChecks
+          .map((code, idx) => ({ code, idx }))
+          .filter((x) => x.code && x.code !== '0x' && x.code !== '0x0')
+          .map((x) => x.idx);
+        if (contractIndexes.length > 0) {
+          const badAddrs = contractIndexes.map((i) => referralChain[i]).join(', ');
+          setError(
+            `One or more referrers is a smart contract address and cannot receive ETH via this contract (transfer gas limit). Addresses: ${badAddrs}`
+          );
+          setLoading(false);
+          return;
+        }
+      } catch (codeErr) {
+        console.warn('[SendToReferrers] getCode checks failed:', codeErr);
+      }
       if (web3.utils.toBN(balance).lt(totalEthNeeded)) {
         setError(`Insufficient balance. You need ${web3.utils.fromWei(totalEthNeeded, 'ether')} ETH`);
         setLoading(false);
         return;
       }
 
+      // Preflight gas estimate to capture revert reasons
+      let estimatedGas;
+      try {
+        estimatedGas = await contract.methods
+          .batchPay(referralChain, ethAmountWei)
+          .estimateGas({ from: account, value: totalEthNeeded.toString() });
+        console.log('[SendToReferrers] estimatedGas:', estimatedGas);
+      } catch (estimateErr) {
+        console.error('[SendToReferrers] Gas estimate failed:', estimateErr);
+        const reason =
+          estimateErr?.reason ||
+          estimateErr?.message ||
+          estimateErr?.data?.message ||
+          estimateErr?.data?.originalError?.message ||
+          'Transaction would fail during estimation.';
+        if (reason.includes('Incorrect ETH sent')) {
+          setError('Payment failed: Incorrect ETH value calculated. Please refresh and try again.');
+        } else if (reason.includes('already paid your upliners')) {
+          setError('You have already paid your upliners on this network.');
+        } else if (reason.includes('execution reverted')) {
+          setError(`Transaction would revert: ${reason}`);
+        } else {
+          setError(reason);
+        }
+        setLoading(false);
+        return;
+      }
+
       // Call batchPay with all referrers in one transaction
-      await contract.methods.batchPay(referralChain, ethAmountWei)
-        .send({
-          from: account,
-          value: totalEthNeeded.toString()
+      await contract.methods
+        .batchPay(referralChain, ethAmountWei)
+        .send({ 
+          from: account, 
+          value: totalEthNeeded.toString(),
+          gas: Math.floor(Number(estimatedGas) * 1.2) || undefined
         });
 
       toast.success(`✅ Successfully sent ${ethAmountPerMember} ETH to ${referralChain.length} referrers!`);
@@ -212,7 +286,13 @@ const SendToReferrers = ({ web3, account }) => {
       if (err.code === 4001) {
         setError('Transaction was rejected by the user.');
       } else {
-        setError(err.message || 'Error sending payments to referrers');
+        const reason =
+          err?.reason ||
+          err?.message ||
+          err?.data?.message ||
+          err?.data?.originalError?.message ||
+          'Error sending payments to referrers';
+        setError(reason);
       }
     } finally {
       setLoading(false);
@@ -373,44 +453,40 @@ const SendToReferrers = ({ web3, account }) => {
             <div style={{
               marginBottom: '24px'
             }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#2d3436',
-                marginBottom: '8px',
-                textAlign: 'left'
+              <div style={{
+                background: 'rgba(0, 184, 148, 0.1)',
+                border: '2px solid rgba(0, 184, 148, 0.2)',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                textAlign: 'center',
+                marginBottom: '8px'
               }}>
-              </label>
-              <input
-                type="hidden"
-                step="0.001"
-                min="0"
-                style={{
-                  width: '100%',
-                  padding: '16px 20px',
-                  border: '2px solid #e9ecef',
-                  borderRadius: '16px',
-                  fontSize: '16px',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'transparent',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                }}
-                value={ethAmountPerMember}
-                onChange={(e) => setEthAmountPerMember(e.target.value)}
-                placeholder="Enter amount per referrer"
-                required
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#00b894';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(0, 184, 148, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e9ecef';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
-                }}
-              />
+                <p style={{
+                  color: '#2d3436',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  margin: '0 0 4px 0'
+                }}>
+                  Payment Amount (Fixed at 1 ETH)
+                </p>
+                <p style={{
+                  color: '#00b894',
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  margin: '0',
+                  fontFamily: 'monospace'
+                }}>
+                  {parseFloat(ethAmountPerMember).toFixed(3)} ETH per referrer
+                </p>
+                <p style={{
+                  color: '#636e72',
+                  fontSize: '12px',
+                  margin: '4px 0 0 0',
+                  opacity: '0.8'
+                }}>
+                  Fixed amount per referrer
+                </p>
+              </div>
             </div>
 
             <div style={{
@@ -455,13 +531,13 @@ const SendToReferrers = ({ web3, account }) => {
               }}>
                 • Amount per referrer: {ethAmountPerMember} ETH
                 <br />
-                • Total: {ethAmountPerMember * referralChain.length} ETH
+                • Total: {(Number(ethAmountPerMember) * referralChain.length).toFixed(3)} ETH
               </p>
             </div>
 
             <button
               onClick={handleSendToReferrers}
-              disabled={loading || !ethAmountPerMember}
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: '18px 24px',
@@ -559,35 +635,39 @@ const SendToReferrers = ({ web3, account }) => {
               </p>
             </div>
 
-            {hasPaid && (
-              <button
-                onClick={handleBecomeMember}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '18px 24px',
-                  background: loading ? '#e9ecef' : 'linear-gradient(135deg, #00cec9 0%, #00b894 100%)',
-                  border: 'none',
-                  borderRadius: '16px',
-                  color: 'white',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(0, 206, 201, 0.25)',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {loading ? (
-                  <>
-                    <span style={{ marginRight: '8px' }}>⏳</span>
-                    Processing...
-                  </>
-                ) : (
-                  'Become A Member'
-                )}
-              </button>
+            {!isMember && (
+              <div style={{
+                textAlign: 'center',
+                marginTop: '20px'
+              }}>
+                <button
+                  onClick={() => router.push('/referral')}
+                  style={{
+                    padding: '12px 24px',
+                    background: 'linear-gradient(135deg, #00cec9 0%, #00b894 100%)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(0, 206, 201, 0.25)',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    letterSpacing: '0.5px',
+                    marginBottom: '12px'
+                  }}
+                >
+                  Join Cash Round
+                </button>
+                <p style={{
+                  color: '#636e72',
+                  fontSize: '12px',
+                  margin: '8px 0 0 0'
+                }}>
+                  Click to go back to the join page
+                </p>
+              </div>
             )}
           </div>
         )}

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.0;
 
 contract Tree {
     uint256 public Count = 0;
+    bool private locked;
 
     struct User {
         address inviter;
@@ -27,7 +28,14 @@ contract Tree {
     address public top;
     mapping(address => bool) public hasPaidUpliners;
 
-    constructor() public {
+    modifier noReentrancy() {
+        require(!locked, "No reentrancy");
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    constructor() {
         tree[msg.sender] = User(msg.sender, msg.sender);
         top = msg.sender;
     }
@@ -35,6 +43,7 @@ contract Tree {
     function enter(address _inviter, address _subscription)
         public
         payable
+        noReentrancy
     {
         require(msg.value > 0, "ETH amount must be greater than zero");
         require(
@@ -42,33 +51,53 @@ contract Tree {
             "Sender can't already exist in tree"
         );
         require(tree[_inviter].self == _inviter, "Inviter must exist");
-        Count++;
 
+        // Effects: Update state variables
+        Count++;
         tree[msg.sender] = User(_inviter, msg.sender);
 
-        bool sent = payable(top).send(msg.value);
+        // Interaction: External call
+        (bool sent, ) = payable(top).call{value: msg.value}("");
         require(sent, "Failed to send Ether");
 
         emit Summary(msg.sender, _inviter, _subscription, Count);
     }
 
-    function pay(address _member) public payable {
+    function pay(address _member)
+        public
+        payable
+        noReentrancy
+    {
+        // Effects: Update state variables
         Count++;
-        bool sent = payable(_member).send(msg.value);
+
+        // Interaction: External call
+        (bool sent, ) = payable(_member).call{value: msg.value}("");
         require(sent, "Failed to send Ether");
 
         emit Payments(msg.sender, _member, msg.value, Count);
     }
 
-    function batchPay(address[] memory _members, uint256 amountPerMember) public payable {
+    function batchPay(address[] memory _members, uint256 amountPerMember)
+        public
+        payable
+        noReentrancy
+    {
         require(!hasPaidUpliners[msg.sender], "You have already paid your upliners");
         uint256 total = _members.length * amountPerMember;
         require(msg.value == total, "Incorrect ETH sent for batch payment");
+
+        // Effects: Update state variables
+        hasPaidUpliners[msg.sender] = true;
+
         for (uint256 i = 0; i < _members.length; i++) {
-            payable(_members[i]).transfer(amountPerMember);
+            // Interaction: External call
+            (bool sent, ) = payable(_members[i]).call{value: amountPerMember}("");
+            require(sent, "Failed to send Ether");
             emit Payments(msg.sender, _members[i], amountPerMember, Count + i + 1);
         }
+
+        // Update Count after all interactions
         Count += _members.length;
-        hasPaidUpliners[msg.sender] = true;
     }
 }

@@ -38,30 +38,22 @@ export default function Home() {
       const currentNetworkName = networkNames[networkId] || `Network ${networkId}`;
       console.log(`Connected to: ${currentNetworkName}`);
       
-      if (networkData && networkData.address) {
+      const addressOverride = '0xFD2FaC399ddc9966070514ED87269aee9A93a824';
+      const contractAddress = (networkData && networkData.address) ? networkData.address : addressOverride;
+      if (contractAddress) {
         const contract = new web3Instance.eth.Contract(
           TreeContract.abi,
-          networkData.address
+          contractAddress
         );
-        
-        // Check if user has a referrer
-        const referrer = await contract.methods.getReferrer(accountAddress).call();
-        const hasReferrer = referrer !== '0x0000000000000000000000000000000000000000';
-        
         // Check if user is already a member of the tree
         const userData = await contract.methods.tree(accountAddress).call();
         const isMember = userData.inviter !== '0x0000000000000000000000000000000000000000';
-        
-        setHasReferrer(hasReferrer);
         setIsMember(isMember);
         setCheckingReferrer(false);
-
-        // If user has a referrer or is already a member, redirect to SendToReferrers
-        if (hasReferrer || isMember) {
+        if (isMember) {
           router.push('/send-to-referrers');
         }
       } else {
-        // Show network info for debugging
         console.log(`No contract found on ${currentNetworkName}. Available networks:`, Object.keys(TreeContract.networks));
         setCheckingReferrer(false);
       }

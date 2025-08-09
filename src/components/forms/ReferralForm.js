@@ -34,7 +34,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
   const router = useRouter();
   const activeWallet = useActiveWallet();
   const [referrerAddress, setReferrerAddress] = useState('');
-  const [ethAmount, setEthAmount] = useState('5');
+  const [ethAmount, setEthAmount] = useState('0.001');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -50,22 +50,31 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
   // Get network ID and initialize contract when component mounts or web3 changes
   useEffect(() => {
     const initialize = async () => {
-      if (web3) {
-        try {
-          const id = await web3.eth.net.getId();
-          setNetworkId(id);
-          const networkData = TreeContract.networks[id];
-          
-          if (networkData && networkData.address) {
-            const contractInstance = new web3.eth.Contract(
-              TreeContract.abi,
-              networkData.address
-            );
-            setContract(contractInstance);
-          }
-        } catch (error) {
-          // Silent error handling
+      if (!web3) return;
+      try {
+        const id = await web3.eth.net.getId();
+        setNetworkId(id);
+        const networkData = TreeContract.networks[id];
+        // Known addresses per network
+        const addressBook = {
+          80002: '0xFD2FaC399ddc9966070514ED87269aee9A93a824', // Polygon Amoy (Amon testnet)
+          137: '0xa1268396c94543f42238accfaee9776fce12a52a',   // Polygon Mainnet
+          5777: TreeContract.networks?.[5777]?.address,
+          1337: TreeContract.networks?.[1337]?.address
+        };
+        const contractAddress = addressBook[id] || (networkData && networkData.address);
+        if (contractAddress) {
+          const contractInstance = new web3.eth.Contract(
+            TreeContract.abi,
+            contractAddress
+          );
+          setContract(contractInstance);
+        } else {
+          setContract(null);
         }
+      } catch (error) {
+        // Silent error handling
+        setContract(null);
       }
     };
     initialize();
@@ -187,7 +196,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
       }
     };
     checkMembership();
-  }, [contract, account, router]);
+  }, [contract, account, router, setIsMember, web3]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -196,15 +205,12 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
       return;
     }
 
-    if (!networkId || !TreeContract.networks[networkId]) {
-      toast.error('Please connect to a supported network');
+    if (!contract) {
+      toast.error('Contract not initialized. Please check your network and try again.');
       return;
     }
 
-    if (!ethAmount || isNaN(ethAmount) || parseFloat(ethAmount) <= 0) {
-      toast.error('Please enter a valid ETH amount');
-      return;
-    }
+    // ETH amount is fixed, no need to validate
 
     // Validate referrer address format
     if (!web3.utils.isAddress(referrerAddress)) {
@@ -235,7 +241,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
 
       toast.success('Successfully joined the referral tree!');
       setReferrerAddress('');
-      setEthAmount('');
+      // Keep the fixed ETH amount
       setShowBecomeMember(true);
       
       // Redirect to SendToReferrers component after successful submission
@@ -461,7 +467,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
         draggable
         pauseOnHover
       />
-      {networkId && !TreeContract.networks[networkId] && (
+          {networkId && !contract && (
         <div style={{
           background: 'rgba(255, 193, 7, 0.1)',
           border: '1px solid #ffc107',
@@ -472,7 +478,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          Please connect to a supported network. Current network ID: {networkId}
+              Please switch to a supported network (Polygon Amoy 80002 or Polygon Mainnet 137). Current network ID: {networkId}
         </div>
       )}
       <form onSubmit={handleSubmit} style={{ width: '100%' }}>
@@ -536,7 +542,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             letterSpacing: '0.5px'
           }}
-          disabled={loading || !web3 || !account || !TreeContract.networks[networkId]}
+          disabled={loading || !web3 || !account || !contract}
           onMouseEnter={(e) => {
             if (!e.target.disabled) {
               e.target.style.transform = 'translateY(-1px)';
