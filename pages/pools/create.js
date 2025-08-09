@@ -14,7 +14,8 @@ export default function CreatePool() {
   const [size, setSize] = useState(5);
   const [contribution, setContribution] = useState('0');
   const [roundDuration, setRoundDuration] = useState(30 * 24 * 60 * 60);
-  const [startTime, setStartTime] = useState(Math.floor(Date.now() / 1000) + 3600);
+  const [startTime, setStartTime] = useState('');
+  const [mounted, setMounted] = useState(false);
   const [orderCsv, setOrderCsv] = useState('');
   const [processing, setProcessing] = useState(false);
 
@@ -38,6 +39,13 @@ export default function CreatePool() {
         return;
       }
       setFactory(getFactory(w3, FACTORY_ADDRESS));
+      // Set default start time on client to avoid SSR hydration drift
+      try {
+        setMounted(true);
+        if (!startTime) {
+          setStartTime(Math.floor(Date.now() / 1000) + 3600);
+        }
+      } catch {}
     })();
   }, []);
 
@@ -195,8 +203,8 @@ export default function CreatePool() {
               onFocus={onFocus}
               onBlur={onBlur}
             />
-            <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }}>
-              {startTime ? new Date(Number(startTime) * 1000).toLocaleString() : ''}
+            <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }} suppressHydrationWarning>
+              {mounted && startTime ? new Date(Number(startTime) * 1000).toLocaleString() : ''}
             </div>
           </div>
 
