@@ -106,33 +106,56 @@ export default function PoolDetail() {
     }
   };
 
+  const cardStyle = {
+    maxWidth: 640,
+    margin: '0 auto',
+    background: 'white',
+    borderRadius: 16,
+    padding: 24,
+    boxShadow: '0 10px 30px rgba(0,0,0,0.06)'
+  };
+
+  const rowStyle = { display: 'grid', gridTemplateColumns: '180px 1fr', gap: 12, marginBottom: 10 };
+  const keyStyle = { color: '#636e72', fontSize: 13 };
+  const valStyle = { color: '#2d3436', fontFamily: 'monospace', fontSize: 14 };
+
   return (
     <LayoutWithHeader showSignout={true}>
       <ToastContainer position="top-center" />
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <h3>Pool: {address}</h3>
+      <div style={cardStyle}>
+        <h3 style={{ marginTop: 0, marginBottom: 8, color: '#2d3436' }}>Pool</h3>
+        <p style={{ marginTop: 0, color: '#9aa0a6', fontSize: 12 }}>{address}</p>
         {loading || !info ? (
           <p>Loading...</p>
         ) : (
           <>
-            <p>Token: {token}</p>
-            <p>Size: {info.size}</p>
-            <p>Contribution per round: {fmt(info.contribution)}</p>
-            <p>Current round: {Number(info.currentRound)}</p>
-            <p>Current recipient: {info.currentRecipient}</p>
+            <div style={rowStyle}><div style={keyStyle}>Token</div><div style={valStyle}>{token}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Size</div><div style={valStyle}>{info.size}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Current round</div><div style={valStyle}>{Number(info.currentRound)}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Current recipient</div><div style={valStyle}>{info.currentRecipient}</div></div>
             <div style={{ margin: '16px 0' }}>
-              <button disabled={isContributing} onClick={approveAndContribute} style={{ marginRight: 12 }}>
+              <button disabled={isContributing} onClick={approveAndContribute} style={{
+                marginRight: 12,
+                padding: '10px 14px',
+                background: isContributing ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+                border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
+              }}>
                 {isContributing ? 'Processing...' : 'Approve & Contribute'}
               </button>
-              <button disabled={isContributing} onClick={triggerPayout}>
+              <button disabled={isContributing} onClick={triggerPayout} style={{
+                padding: '10px 14px',
+                background: isContributing ? '#e9ecef' : 'linear-gradient(135deg, #00cec9 0%, #00b894 100%)',
+                border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
+              }}>
                 {isContributing ? 'Processing...' : 'Trigger Payout'}
               </button>
             </div>
             <div>
-              <p>Payout order:</p>
-              <ol>
+              <p style={{ color: '#2d3436', fontWeight: 600 }}>Payout order</p>
+              <ol style={{ marginTop: 8 }}>
                 {order.map((m) => (
-                  <li key={m}>{m}</li>
+                  <li key={m} style={{ fontFamily: 'monospace', fontSize: 14 }}>{m}</li>
                 ))}
               </ol>
             </div>
