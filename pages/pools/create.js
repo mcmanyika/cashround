@@ -135,16 +135,22 @@ export default function CreatePool() {
         </div>
 
         <div style={{ display: 'grid', gap: 14 }}>
-          <div>
-            <div style={labelStyle}>USDC token address</div>
-            <input
-              style={{ ...inputStyle, fontFamily: 'monospace' }}
-              placeholder="0x..."
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              onFocus={onFocus}
-              onBlur={onBlur}
-            />
+          {/* Hidden token address field; auto-populated via chain or env */}
+          <input type="hidden" value={token} readOnly />
+          <div style={{
+            background: 'rgba(0, 184, 148, 0.06)',
+            border: '1px dashed rgba(0, 184, 148, 0.35)',
+            borderRadius: 10,
+            padding: '10px 12px',
+            color: '#2d3436',
+            fontSize: 13
+          }}>
+            Token: USDC {token ? '(auto-detected)' : '(not configured for this chain)'}
+            {!token && (
+              <span style={{ color: '#e67e22', marginLeft: 6 }}>
+                Set NEXT_PUBLIC_USDC_ADDRESS in .env.local
+              </span>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
