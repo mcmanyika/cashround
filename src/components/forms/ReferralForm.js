@@ -51,6 +51,19 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
   const [totalAmountReceived, setTotalAmountReceived] = useState('0');
   const [isContractOwner, setIsContractOwner] = useState(false);
 
+  // Helpers for friendly error messages
+  const getNativeTokenLabel = (id) => {
+    if (id === 137 || id === 80002) return 'POL';
+    return 'ETH';
+  };
+  const formatWei = (wei) => (web3 ? web3.utils.fromWei(wei, 'ether') : '0');
+  const buildInsufficientFundsMsg = (requiredWei, balanceWei) => {
+    const symbol = getNativeTokenLabel(networkId);
+    const required = formatWei(requiredWei);
+    const balance = formatWei(balanceWei);
+    return `Insufficient funds. You need about ${required} ${symbol} (including gas). Your balance is ${balance} ${symbol}.`;
+  };
+
   // Get network ID and initialize contract when component mounts or web3 changes
   useEffect(() => {
     const initialize = async () => {
@@ -248,6 +261,33 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
 
       const ethAmountWei = web3.utils.toWei(ethAmount, 'ether');
 
+      // Preflight: estimate gas and verify balance covers value + gas
+      try {
+        const estimatedGas = await contract.methods
+          .enter(referrerAddress, referrerAddress)
+          .estimateGas({ from: account, value: ethAmountWei });
+        const gasPrice = await web3.eth.getGasPrice();
+        const totalRequiredWei = web3.utils
+          .toBN(ethAmountWei)
+          .add(web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas)));
+        const balanceWei = await web3.eth.getBalance(account);
+        if (web3.utils.toBN(balanceWei).lt(totalRequiredWei)) {
+          const msg = buildInsufficientFundsMsg(totalRequiredWei.toString(), balanceWei);
+          toast.error(msg);
+          setLoading(false);
+          return;
+        }
+      } catch (estimateErr) {
+        // If estimation fails due to insufficient funds or other common reasons, provide a friendly message
+        const raw = estimateErr?.message || estimateErr?.data?.message || '';
+        if (raw.toLowerCase().includes('insufficient funds')) {
+          toast.error('Insufficient funds for transaction and gas. Please add more funds and try again.');
+          setLoading(false);
+          return;
+        }
+        // Fall through for other reasons; transaction send may still provide a clearer error
+      }
+
       // Call the enter function
       await contract.methods.enter(referrerAddress, referrerAddress)
         .send({ from: account, value: ethAmountWei });
@@ -263,7 +303,14 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
       }, 2000); // Wait 2 seconds to show the success message
       
     } catch (err) {
-      toast.error(err.message || 'An error occurred while processing your request');
+      const msg = (err?.message || '').toLowerCase();
+      if (msg.includes('insufficient funds')) {
+        toast.error('Insufficient funds for value and gas. Please top up your wallet and try again.');
+      } else if (msg.includes('user denied') || err?.code === 4001) {
+        toast.error('Transaction was rejected in your wallet.');
+      } else {
+        toast.error(err.message || 'An error occurred while processing your request');
+      }
     } finally {
       setLoading(false);
     }

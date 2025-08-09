@@ -21,6 +21,19 @@ const SendToReferrers = ({ web3, account }) => {
   const [copyClicked, setCopyClicked] = useState(false);
   const [debugInfo, setDebugInfo] = useState('Component initialized');
 
+  // Helpers for friendly error messages
+  const getNativeTokenLabel = (id) => {
+    if (id === 137 || id === 80002) return 'POL';
+    return 'ETH';
+  };
+  const formatWei = (wei) => (web3 ? web3.utils.fromWei(wei, 'ether') : '0');
+  const buildInsufficientFundsMsg = (requiredWei, balanceWei) => {
+    const symbol = getNativeTokenLabel(networkId);
+    const required = formatWei(requiredWei);
+    const balance = formatWei(balanceWei);
+    return `Insufficient funds. You need about ${required} ${symbol} (including gas). Your balance is ${balance} ${symbol}.`;
+  };
+
   // Log props on component mount/update
   useEffect(() => {
     console.log('=== SendToReferrers Props ===');
@@ -243,13 +256,23 @@ const SendToReferrers = ({ web3, account }) => {
         return;
       }
 
-      // Preflight gas estimate to capture revert reasons
+      // Preflight gas estimate to capture revert reasons and ensure balance covers value + gas
       let estimatedGas;
       try {
         estimatedGas = await contract.methods
           .batchPay(referralChain, ethAmountWei)
           .estimateGas({ from: account, value: totalEthNeeded.toString() });
         console.log('[SendToReferrers] estimatedGas:', estimatedGas);
+        const gasPrice = await web3.eth.getGasPrice();
+        const totalRequiredWei = web3.utils
+          .toBN(totalEthNeeded)
+          .add(web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas)));
+        const balanceWei = await web3.eth.getBalance(account);
+        if (web3.utils.toBN(balanceWei).lt(totalRequiredWei)) {
+          setError(buildInsufficientFundsMsg(totalRequiredWei.toString(), balanceWei));
+          setLoading(false);
+          return;
+        }
       } catch (estimateErr) {
         console.error('[SendToReferrers] Gas estimate failed:', estimateErr);
         const reason =
@@ -258,7 +281,9 @@ const SendToReferrers = ({ web3, account }) => {
           estimateErr?.data?.message ||
           estimateErr?.data?.originalError?.message ||
           'Transaction would fail during estimation.';
-        if (reason.includes('Incorrect ETH sent')) {
+        if (reason.toLowerCase().includes('insufficient funds')) {
+          setError('Insufficient funds for payments and gas. Please add more funds and try again.');
+        } else if (reason.includes('Incorrect ETH sent')) {
           setError('Payment failed: Incorrect ETH value calculated. Please refresh and try again.');
         } else if (reason.includes('already paid your upliners')) {
           setError('You have already paid your upliners on this network.');
@@ -286,13 +311,17 @@ const SendToReferrers = ({ web3, account }) => {
       if (err.code === 4001) {
         setError('Transaction was rejected by the user.');
       } else {
-        const reason =
+        const raw =
           err?.reason ||
           err?.message ||
           err?.data?.message ||
           err?.data?.originalError?.message ||
-          'Error sending payments to referrers';
-        setError(reason);
+          '';
+        if (raw.toLowerCase().includes('insufficient funds')) {
+          setError('Insufficient funds for payments and gas. Please top up your wallet and try again.');
+        } else {
+          setError(raw || 'Error sending payments to referrers');
+        }
       }
     } finally {
       setLoading(false);
