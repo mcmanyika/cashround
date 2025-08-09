@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { LayoutWithHeader } from '../../src/components/layout/Layout';
 import { getWeb3, getFactory } from '../../src/rosca/services/rosca';
+import { getDefaultUsdcForChain } from '../../src/rosca/config/tokens';
 
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_POOL_FACTORY_ADDRESS || '';
 
@@ -27,6 +28,11 @@ export default function CreatePool() {
       setWeb3(w3);
       const accounts = await w3.eth.requestAccounts();
       setAccount(accounts?.[0] || '');
+      try {
+        const netId = await w3.eth.net.getId();
+        const suggested = getDefaultUsdcForChain(netId);
+        if (suggested) setToken(suggested);
+      } catch {}
       if (!FACTORY_ADDRESS) {
         toast.error('Factory address is not configured.');
         return;
