@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ToastContainer, toast } from 'react-toastify';
 import { LayoutWithHeader } from '../../src/components/layout/Layout';
-import { getWeb3, getRoscaPool, getErc20 } from '../../src/rosca/services/rosca';
+import { getWeb3, getRoscaPool, getErc20, isTreeOwner } from '../../src/rosca/services/rosca';
 
 export default function PoolDetail() {
   const router = useRouter();
@@ -16,6 +16,7 @@ export default function PoolDetail() {
   const [decimals, setDecimals] = useState(6); // USDC default
   const [loading, setLoading] = useState(true);
   const [isContributing, setIsContributing] = useState(false);
+  const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
     if (!address) return;
@@ -29,7 +30,15 @@ export default function PoolDetail() {
         }
         setWeb3(w3);
         const accounts = await w3.eth.requestAccounts();
-        setAccount(accounts?.[0] || '');
+        if (!accounts || accounts.length === 0) {
+          toast.error('Please connect your wallet');
+          setLoading(false);
+          router.push('/');
+          return;
+        }
+        setAccount(accounts[0]);
+        const owner = await isTreeOwner(w3, accounts?.[0]);
+        setAllowed(owner);
         const p = getRoscaPool(w3, address);
         setPool(p);
         const [tok, size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt] = await p.methods.poolInfo().call();
@@ -127,6 +136,8 @@ export default function PoolDetail() {
         <p style={{ marginTop: 0, color: '#9aa0a6', fontSize: 12 }}>{address}</p>
         {loading || !info ? (
           <p>Loading...</p>
+        ) : !allowed ? (
+          <p style={{ color: '#e67e22' }}>Access restricted. Only the Tree contract creator can view this pool.</p>
         ) : (
           <>
             <div style={rowStyle}><div style={keyStyle}>Token</div><div style={valStyle}>{token}</div></div>

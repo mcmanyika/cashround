@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useActiveWallet, useActiveAccount, ConnectButton } from 'thirdweb/react';
+import Link from 'next/link';
+import { getWeb3, isTreeOwner } from '../../rosca/services/rosca';
 import { lightTheme } from 'thirdweb/react';
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 
@@ -78,6 +80,25 @@ export const LayoutLoading = ({ className = '' }) => (
 
 export const LayoutSignout = ({ className = '' }) => {
   const activeWallet = useActiveWallet();
+  const activeAccount = useActiveAccount();
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const w3 = await getWeb3();
+        const addr = activeAccount?.address;
+        if (w3 && addr) {
+          const owner = await isTreeOwner(w3, addr);
+          setAllowed(owner);
+        } else {
+          setAllowed(false);
+        }
+      } catch {
+        setAllowed(false);
+      }
+    })();
+  }, [activeAccount?.address]);
 
   const handleSignout = async () => {
     if (activeWallet) {
@@ -88,23 +109,45 @@ export const LayoutSignout = ({ className = '' }) => {
   };
 
   return (
-    <p
-      onClick={handleSignout}
-      className={`layout-signout ${className}`}
+    <div
       style={{
         position: 'absolute',
         bottom: '30px',
         right: '20px',
-        margin: '0',
-        cursor: 'pointer',
-        color: '#636e72',
-        fontSize: '14px',
-        padding: '10px',
-        zIndex: 1000
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        zIndex: 1000,
       }}
     >
-      Signout
-    </p>
+      {allowed && (
+        <Link
+          href="/pools"
+          style={{
+            color: '#00b894',
+            fontSize: '14px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            padding: '10px',
+          }}
+        >
+          Pools
+        </Link>
+      )}
+      <p
+        onClick={handleSignout}
+        className={`layout-signout ${className}`}
+        style={{
+          margin: '0',
+          cursor: 'pointer',
+          color: '#636e72',
+          fontSize: '14px',
+          padding: '10px',
+        }}
+      >
+        Signout
+      </p>
+    </div>
   );
 };
 
@@ -119,10 +162,12 @@ export const LayoutWithHeader = ({ children, showSignout = false, client, isMemb
       <LayoutCard>
         {showSignout && isConnected && <LayoutSignout />}
         <LayoutHeader>
-          <LayoutLogo>
-            <LayoutLogoText>CR</LayoutLogoText>
-            <LayoutLogoBadge>$</LayoutLogoBadge>
-          </LayoutLogo>
+          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <LayoutLogo>
+              <LayoutLogoText>CR</LayoutLogoText>
+              <LayoutLogoBadge>$</LayoutLogoBadge>
+            </LayoutLogo>
+          </Link>
           <LayoutTitle>Cash Round</LayoutTitle>
           <LayoutSubtitle>
             {isMember ? "Welcome Back! Continue Earning Rewards." : "Join Our Network And Start Earning Rewards."}

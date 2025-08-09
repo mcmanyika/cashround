@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
+import { useRouter } from 'next/router';
 import { LayoutWithHeader } from '../../src/components/layout/Layout';
 import { getWeb3, getFactory } from '../../src/rosca/services/rosca';
 import { getDefaultUsdcForChain } from '../../src/rosca/config/tokens';
@@ -7,6 +8,7 @@ import { getDefaultUsdcForChain } from '../../src/rosca/config/tokens';
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_POOL_FACTORY_ADDRESS || '';
 
 export default function CreatePool() {
+  const router = useRouter();
   const [web3, setWeb3] = useState(null);
   const [account, setAccount] = useState('');
   const [factory, setFactory] = useState(null);
@@ -28,7 +30,11 @@ export default function CreatePool() {
       }
       setWeb3(w3);
       const accounts = await w3.eth.requestAccounts();
-      setAccount(accounts?.[0] || '');
+      if (!accounts || accounts.length === 0) {
+        toast.error('Please connect your wallet');
+        return router.push('/');
+      }
+      setAccount(accounts[0]);
       try {
         const netId = await w3.eth.net.getId();
         const suggested = getDefaultUsdcForChain(netId);
