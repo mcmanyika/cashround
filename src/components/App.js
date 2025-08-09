@@ -5,6 +5,8 @@ import ReferralForm from './forms/ReferralForm';
 import MetaMaskConnect from './wallet/MetaMaskConnect';
 import SendToReferrers from './forms/SendToReferrers';
 import TreeContract from '../abis/Tree.json';
+import { PriceProvider } from '../contexts/PriceContext';
+import { LivePriceIndicator } from './common/PriceDisplay';
 import Layout, { 
   LayoutCard, 
   LayoutHeader,
@@ -126,14 +128,15 @@ function App() {
   }
 
   return (
-    <Router>
-      <Layout>
-        <Switch>
-          <Route path="/send-to-referrers">
-            <SendToReferrers web3={web3} account={account} />
-          </Route>
-          <Route path="/">
-            <LayoutCard>
+    <PriceProvider>
+      <Router>
+        <Layout>
+          <Switch>
+            <Route path="/send-to-referrers">
+              <SendToReferrers web3={web3} account={account} />
+            </Route>
+            <Route path="/">
+              <LayoutCard>
               {isConnected && <LayoutSignout />}
               
               {isConnected ? (
@@ -314,6 +317,7 @@ function App() {
         </Switch>
       </Layout>
     </Router>
+    </PriceProvider>
   );
 }
 

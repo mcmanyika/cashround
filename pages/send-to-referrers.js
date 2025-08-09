@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import SendToReferrers from '../src/components/forms/SendToReferrers';
 import { useActiveWallet, useActiveAccount } from "thirdweb/react";
 import { LayoutLoading } from '../src/components/layout/Layout';
+import { PriceProvider } from '../src/contexts/PriceContext';
 
 export default function SendToReferrersPage() {
   const router = useRouter();
@@ -43,5 +44,9 @@ export default function SendToReferrersPage() {
     return <LayoutLoading />;
   }
 
-  return <SendToReferrers web3={web3} account={account} />;
+  return (
+    <PriceProvider>
+      <SendToReferrers web3={web3} account={account} />
+    </PriceProvider>
+  );
 } 

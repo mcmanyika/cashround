@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import TreeContract from '../../abis/Tree.json';
 import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet } from 'thirdweb/react';
+import { getContractAddress, isNetworkSupported } from '../../config/contractConfig';
+import { usePriceContext } from '../../contexts/PriceContext';
 
 // Helper function to get all referrers in the entire tree
 const getAllReferrers = async (contract, userAddress) => {
@@ -33,6 +35,7 @@ const getAllReferrers = async (contract, userAddress) => {
 const ReferralForm = ({ web3, account, setIsMember }) => {
   const router = useRouter();
   const activeWallet = useActiveWallet();
+  const { priceData, loading: priceLoading, calculateUSDValue, formatPrice, price } = usePriceContext();
   const [referrerAddress, setReferrerAddress] = useState('');
   const [ethAmount, setEthAmount] = useState('0.001');
   const [loading, setLoading] = useState(false);
@@ -46,6 +49,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
   const [hasPaidReferrers, setHasPaidReferrers] = useState(false);
   const [referralChain, setReferralChain] = useState([]);
   const [totalAmountReceived, setTotalAmountReceived] = useState('0');
+  const [isContractOwner, setIsContractOwner] = useState(false);
 
   // Get network ID and initialize contract when component mounts or web3 changes
   useEffect(() => {
@@ -89,6 +93,15 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           const member = userData.inviter !== '0x0000000000000000000000000000000000000000';
           setIsMemberLocal(member);
           setIsMember(member);
+          
+          // Check if user is the contract owner
+          try {
+            const topAddress = await contract.methods.top().call();
+            setIsContractOwner(account.toLowerCase() === topAddress.toLowerCase());
+          } catch (error) {
+            console.error('Error checking contract owner:', error);
+            setIsContractOwner(false);
+          }
           
           // Also check if user has already paid their referrers and build referral chain
           if (member) {
@@ -320,7 +333,53 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           </div>
         )}
         
-        {/* Referral Chain Display */}
+        {/* 1. Total Amount Received Display */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(0, 184, 148, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%)',
+          border: '1px solid rgba(0, 184, 148, 0.2)',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '8px'
+          }}>
+            <span style={{ fontSize: '20px', marginRight: '8px' }}>💰</span>
+            <p style={{
+              color: '#2d3436',
+              fontSize: '16px',
+              fontWeight: '600',
+              margin: '0'
+            }}>
+              Total Amount Received
+            </p>
+          </div>
+          <p style={{
+            color: '#00b894',
+            fontSize: '32px',
+            fontWeight: '700',
+            margin: '0',
+            fontFamily: 'monospace'
+          }}>
+            ${calculateUSDValue(totalAmountReceived)}
+          </p>
+          <p style={{
+            color: '#636e72',
+            fontSize: '12px',
+            margin: '8px 0 0 0',
+            opacity: '0.8'
+          }}>
+            From referral rewards ({parseFloat(totalAmountReceived).toFixed(2)} POL) {priceData && (
+              <span>• Live rate: ${formatPrice(4)}</span>
+            )}
+          </p>
+        </div>
+
+        {/* 2. Referral Chain Display */}
         {referralChain.length > 0 && (
           <div style={{
             background: '#f8f9fa',
@@ -349,75 +408,80 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             ))}
           </div>
         )}
-        
-        {/* Total Amount Received Display */}
+
+        {/* 3. Maximum Earning Potential - Hidden for contract owner */}
+        {!isContractOwner && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(0, 184, 148, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%)',
-          border: '1px solid rgba(0, 184, 148, 0.2)',
-          borderRadius: '12px',
-          padding: '20px',
+          background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%)',
+          border: '2px solid rgba(255, 215, 0, 0.3)',
+          borderRadius: '16px',
+          padding: '24px',
           marginBottom: '20px',
-          textAlign: 'center'
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            left: '-50%',
+            width: '200%',
+            height: '200%',
+            background: 'linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.05), transparent)',
+            animation: 'shimmer 3s ease-in-out infinite'
+          }}></div>
+          
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '8px'
+            marginBottom: '12px',
+            position: 'relative',
+            zIndex: 1
           }}>
-            <span style={{ fontSize: '20px', marginRight: '8px' }}>💰</span>
+            <span style={{ fontSize: '24px', marginRight: '8px' }}>🚀</span>
             <p style={{
               color: '#2d3436',
-              fontSize: '16px',
-              fontWeight: '600',
+              fontSize: '18px',
+              fontWeight: '700',
               margin: '0'
             }}>
-              Total Amount Received
+              Maximum Earning Potential
             </p>
           </div>
+          
           <p style={{
-            color: '#00b894',
-            fontSize: '24px',
-            fontWeight: '700',
-            margin: '0',
-            fontFamily: 'monospace'
+            color: '#ff6b35',
+            fontSize: '42px',
+            fontWeight: '800',
+            margin: '8px 0',
+            fontFamily: 'monospace',
+            textShadow: '0 2px 4px rgba(255, 107, 53, 0.2)',
+            position: 'relative',
+            zIndex: 1
           }}>
-            {parseFloat(totalAmountReceived).toFixed(2)} POL
+            ${calculateUSDValue('19525')}
           </p>
+          
           <p style={{
             color: '#636e72',
-            fontSize: '12px',
-            margin: '8px 0 0 0',
-            opacity: '0.8'
+            fontSize: '14px',
+            fontWeight: '500',
+            margin: '4px 0 8px 0',
+            opacity: '0.8',
+            position: 'relative',
+            zIndex: 1
           }}>
-            From referral rewards
+            (19,525 POL at current rate)
           </p>
+          
         </div>
+        )}
         
         <div style={{
           textAlign: 'center',
           padding: '20px'
         }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            background: 'rgba(0, 184, 148, 0.1)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px'
-          }}>
-            <span style={{ fontSize: '24px' }}>✅</span>
-          </div>
-          <p style={{
-            color: '#2d3436',
-            fontSize: '16px',
-            fontWeight: '600',
-            margin: '0 0 8px 0'
-          }}>
-            You already a member
-          </p>
           <p style={{
             color: '#636e72',
             fontSize: '14px',
@@ -517,12 +581,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
           />
         </div>
 
-        {/* Hidden amount field */}
-        <input
-          type="hidden"
-          value={ethAmount}
-          onChange={(e) => setEthAmount(e.target.value)}
-        />
+        {/* Amount is automatically calculated as $5 USD equivalent */}
 
         <button
           type="submit"

@@ -5,6 +5,7 @@ import TreeContract from '../src/abis/Tree.json';
 import { ConnectButton, useActiveWallet, useActiveAccount } from "thirdweb/react";
 import { client } from '../src/client';
 import { LayoutWithHeader, LayoutConnect, LayoutLoading } from '../src/components/layout/Layout';
+import { PriceProvider } from '../src/contexts/PriceContext';
 
 export default function Home() {
   const wallet = useActiveWallet();
@@ -118,8 +119,10 @@ export default function Home() {
   }
 
   return (
-    <LayoutWithHeader>
-      <LayoutConnect client={client} />
-    </LayoutWithHeader>
+    <PriceProvider>
+      <LayoutWithHeader>
+        <LayoutConnect client={client} />
+      </LayoutWithHeader>
+    </PriceProvider>
   );
 } 

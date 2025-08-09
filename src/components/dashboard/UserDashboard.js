@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import TreeContract from '../abis/Tree.json';
+import { usePriceContext } from '../../contexts/PriceContext';
 
 const UserDashboard = ({ web3, account }) => {
+  const { calculateUSDValue } = usePriceContext();
   const [networkId, setNetworkId] = useState(null);
   const [sentPayments, setSentPayments] = useState([]);
   const [receivedPayments, setReceivedPayments] = useState([]);
@@ -133,7 +135,7 @@ const UserDashboard = ({ web3, account }) => {
                 <thead>
                   <tr>
                     <th>To</th>
-                    <th>Amount (ETH)</th>
+                    <th>Amount (USD)</th>
                     <th>Tx Hash</th>
                     <th>Block</th>
                   </tr>
@@ -142,7 +144,7 @@ const UserDashboard = ({ web3, account }) => {
                   {sentPayments.map((event, idx) => (
                     <tr key={event.id || event.transactionHash + idx}>
                       <td className="monospace">{event.returnValues.to}</td>
-                      <td>{web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')}</td>
+                      <td>${calculateUSDValue(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether'))} ({parseFloat(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')).toFixed(2)} POL)</td>
                       <td className="monospace tx-hash">
                         {event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}
                       </td>
@@ -167,7 +169,7 @@ const UserDashboard = ({ web3, account }) => {
                 <thead>
                   <tr>
                     <th>From</th>
-                    <th>Amount (ETH)</th>
+                    <th>Amount (USD)</th>
                     <th>Tx Hash</th>
                     <th>Block</th>
                   </tr>
@@ -176,7 +178,7 @@ const UserDashboard = ({ web3, account }) => {
                   {receivedPayments.map((event, idx) => (
                     <tr key={event.id || event.transactionHash + idx}>
                       <td className="monospace">{event.returnValues.from}</td>
-                      <td>{web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')}</td>
+                      <td>${calculateUSDValue(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether'))} ({parseFloat(web3.utils.fromWei(event.returnValues.amount.toString(), 'ether')).toFixed(2)} POL)</td>
                       <td className="monospace tx-hash">
                         {event.transactionHash.slice(0, 10)}...{event.transactionHash.slice(-6)}
                       </td>

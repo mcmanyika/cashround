@@ -194,7 +194,7 @@ const SendToReferrers = ({ web3, account }) => {
       return;
     }
 
-    // ETH amount is fixed at 0.001 ETH
+    // ETH amount is fixed at 1 ETH
 
     if (referralChain.length === 0) {
       setError('No referrers found in your chain');
