@@ -263,7 +263,11 @@ const SendToReferrers = ({ web3, account }) => {
           .batchPay(referralChain, ethAmountWei)
           .estimateGas({ from: account, value: totalEthNeeded.toString() });
         console.log('[SendToReferrers] estimatedGas:', estimatedGas);
-        const gasPrice = await web3.eth.getGasPrice();
+        let gasPrice = await web3.eth.getGasPrice();
+        if (!gasPrice || gasPrice === '0') {
+          // Fallback for local networks like Ganache that may return 0
+          gasPrice = web3.utils.toWei('20', 'gwei');
+        }
         const totalRequiredWei = web3.utils
           .toBN(totalEthNeeded)
           .add(web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas)));

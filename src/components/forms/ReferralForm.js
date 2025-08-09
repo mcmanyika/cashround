@@ -266,7 +266,11 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
         const estimatedGas = await contract.methods
           .enter(referrerAddress, referrerAddress)
           .estimateGas({ from: account, value: ethAmountWei });
-        const gasPrice = await web3.eth.getGasPrice();
+        let gasPrice = await web3.eth.getGasPrice();
+        if (!gasPrice || gasPrice === '0') {
+          // Fallback for local networks like Ganache that may return 0
+          gasPrice = web3.utils.toWei('20', 'gwei');
+        }
         const totalRequiredWei = web3.utils
           .toBN(ethAmountWei)
           .add(web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas)));
