@@ -7,7 +7,7 @@ import "./Tree.sol";
 contract PoolFactory {
     address public immutable treeContract;
     address public immutable treeCreator;
-    event PoolCreated(address indexed pool, address indexed creator, address token, uint256 size, uint256 contribution, uint256 roundDuration, uint256 startTime);
+    event PoolCreated(address indexed pool, address indexed creator, uint256 size, uint256 contribution, uint256 roundDuration, uint256 startTime);
 
     address[] public allPools;
 
@@ -26,7 +26,6 @@ contract PoolFactory {
     }
 
     function createPool(
-        address token,
         uint256 size,
         uint256 contribution,
         uint256 roundDuration,
@@ -35,10 +34,10 @@ contract PoolFactory {
     ) external onlyEligibleCreator returns (address pool) {
         require(size >= 2 && size <= 12, "Size out of range");
         require(payoutOrder.length == size, "Order size mismatch");
-        RoscaPool newPool = new RoscaPool(msg.sender, token, size, contribution, roundDuration, startTime, payoutOrder);
+        RoscaPool newPool = new RoscaPool(msg.sender, size, contribution, roundDuration, startTime, payoutOrder);
         pool = address(newPool);
         allPools.push(pool);
-        emit PoolCreated(pool, msg.sender, token, size, contribution, roundDuration, startTime);
+        emit PoolCreated(pool, msg.sender, size, contribution, roundDuration, startTime);
     }
 
     function getPools() external view returns (address[] memory) {

@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./interfaces/IERC20.sol";
-
 contract RoscaPool {
     // Basic config
     address public immutable creator;
-    address public immutable token; // USDC preferred
     uint256 public immutable size;
-    uint256 public immutable contribution; // per round per member
+    uint256 public immutable contribution; // per round per member (in wei)
     uint256 public immutable roundDuration; // seconds
     uint256 public immutable startTime;
 
@@ -38,7 +35,6 @@ contract RoscaPool {
 
     constructor(
         address _creator,
-        address _token,
         uint256 _size,
         uint256 _contribution,
         uint256 _roundDuration,
@@ -46,11 +42,9 @@ contract RoscaPool {
         address[] memory _payoutOrder
     ) {
         require(_creator != address(0), "bad creator");
-        require(_token != address(0), "bad token");
         require(_size >= 2 && _size <= 12, "size range");
         require(_payoutOrder.length == _size, "order mismatch");
         creator = _creator;
-        token = _token;
         size = _size;
         contribution = _contribution;
         roundDuration = _roundDuration;
@@ -66,7 +60,6 @@ contract RoscaPool {
     }
 
     function poolInfo() external view returns (
-        address _token,
         uint256 _size,
         uint256 _contribution,
         uint256 _roundDuration,
@@ -75,7 +68,6 @@ contract RoscaPool {
         address _currentRecipient,
         uint256 _roundEndsAt
     ) {
-        _token = token;
         _size = size;
         _contribution = contribution;
         _roundDuration = roundDuration;
@@ -97,13 +89,11 @@ contract RoscaPool {
         return block.timestamp >= startTime;
     }
 
-    function contribute() external noReentrancy {
+    function contribute() external payable noReentrancy {
         require(roundOpen(), "not started");
         require(isMember[msg.sender], "not member");
         require(!hasContributed[currentRound][msg.sender], "already paid");
-
-        // Pull USDC from contributor
-        require(IERC20(token).transferFrom(msg.sender, address(this), contribution), "transferFrom failed");
+        require(msg.value == contribution, "incorrect amount");
 
         hasContributed[currentRound][msg.sender] = true;
         totalContributed[currentRound] += contribution;
@@ -123,13 +113,17 @@ contract RoscaPool {
 
         // Effects before interaction
         // Payout to recipient
-        require(IERC20(token).transfer(recipient, amount), "payout failed");
+        (bool success, ) = recipient.call{value: amount}("");
+        require(success, "payout failed");
         emit Payout(currentRound, recipient, amount);
 
         // Advance round
         currentRound += 1;
         emit RoundAdvanced(currentRound);
     }
+
+    // Allow contract to receive ETH
+    receive() external payable {}
 }
 
 

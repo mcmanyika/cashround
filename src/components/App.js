@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Web3 from 'web3';
+import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import ReferralForm from './forms/ReferralForm';
 import MetaMaskConnect from './wallet/MetaMaskConnect';
 import SendToReferrers from './forms/SendToReferrers';
@@ -21,10 +21,9 @@ import Layout, {
 
 
 function App() {
-
-  const [account, setAccount] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState('');
+  const activeWallet = useActiveWallet();
+  const activeAccount = useActiveAccount();
+  
   const [web3, setWeb3] = useState(null);
   const [hasJoined, setHasJoined] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -33,29 +32,24 @@ function App() {
   const [isMember, setIsMember] = useState(false);
   const [copyClicked, setCopyClicked] = useState(false);
 
+  // Sync thirdweb connection state with local state
   useEffect(() => {
-    const finishLoading = () => {
+    if (activeAccount?.address && activeWallet) {
+      console.log('Thirdweb wallet connected:', activeAccount.address);
+      
+      // Create web3 instance if it doesn't exist
+      if (window.ethereum) {
+        const Web3 = require('web3');
+        const web3Instance = new Web3(window.ethereum);
+        setWeb3(web3Instance);
+        checkReferrerStatus(web3Instance, activeAccount.address);
+      }
       setLoading(false);
-    };
-    if (window.ethereum && !localStorage.getItem('logout')) {
-      window.ethereum.request({ method: 'eth_accounts' })
-        .then(accounts => {
-          if (accounts.length > 0) {
-            const web3Instance = new Web3(window.ethereum);
-            setAccount(accounts[0]);
-            setIsConnected(true);
-            setWeb3(web3Instance);
-            checkReferrerStatus(web3Instance, accounts[0]);
-            finishLoading();
-          } else {
-            finishLoading();
-          }
-        })
-        .catch(finishLoading);
     } else {
-      finishLoading();
+      console.log('Thirdweb wallet disconnected');
+      setLoading(false);
     }
-  }, []);
+  }, [activeAccount, activeWallet]);
 
   const checkReferrerStatus = async (web3Instance, accountAddress) => {
     if (!web3Instance || !accountAddress) return;
@@ -127,6 +121,11 @@ function App() {
     return <LayoutLoading />;
   }
 
+  // Give thirdweb more time to initialize before showing loading
+  if (!activeAccount && (activeAccount === undefined || activeWallet === undefined)) {
+    return <LayoutLoading />;
+  }
+
   return (
     <PriceProvider>
       <Router>
@@ -137,9 +136,9 @@ function App() {
             </Route>
             <Route path="/">
               <LayoutCard>
-              {isConnected && <LayoutSignout />}
+              {activeAccount && <LayoutSignout />}
               
-              {isConnected ? (
+              {activeAccount ? (
                 <div style={{ width: '100%' }}>
                   <div style={{
                     background: 'rgba(0, 184, 148, 0.1)',
@@ -153,7 +152,7 @@ function App() {
                     width: '100%',
                     boxSizing: 'border-box'
                   }}>
-                    Connected: {formatAddress(account)}
+                    Connected: {formatAddress(activeAccount.address)}
                     <span 
                       style={{ 
                         cursor: 'pointer', 
@@ -170,7 +169,7 @@ function App() {
                         justifyContent: 'center',
                         border: copyClicked ? '1px solid #00b894' : '1px solid #e0e0e0'
                       }} 
-                      onClick={() => copyAddress(account)}
+                      onClick={() => copyAddress(activeAccount.address)}
                     >
                       📋
                     </span>
@@ -297,7 +296,7 @@ function App() {
                       </button>
                     </div>
                   ) : (
-                    <ReferralForm web3={web3} account={account} />
+                    <ReferralForm web3={web3} account={activeAccount.address} />
                   )}
                 </div>
               ) : (
@@ -309,7 +308,7 @@ function App() {
                   }}>
                     Please connect your wallet to continue
                   </p>
-                  
+                  <MetaMaskConnect />
                 </div>
               )}
             </LayoutCard>

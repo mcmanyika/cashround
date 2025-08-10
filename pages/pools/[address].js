@@ -1,93 +1,360 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ToastContainer, toast } from 'react-toastify';
-import { LayoutWithHeader } from '../../src/components/layout/Layout';
-import { getWeb3, getRoscaPool, getErc20, hasTwoLevelDownline, isTreeOwner } from '../../src/rosca/services/rosca';
+import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
+import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
+import { getWeb3, getRoscaPool, getErc20, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
 
 export default function PoolDetail() {
   const router = useRouter();
   const { address } = router.query;
+  const activeWallet = useActiveWallet();
+  const activeAccount = useActiveAccount();
   const [web3, setWeb3] = useState(null);
   const [account, setAccount] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
   const [pool, setPool] = useState(null);
   const [info, setInfo] = useState(null);
   const [order, setOrder] = useState([]);
   const [token, setToken] = useState('');
-  const [decimals, setDecimals] = useState(6); // USDC default
+  const [decimals, setDecimals] = useState(18); // ETH default
   const [loading, setLoading] = useState(true);
   const [isContributing, setIsContributing] = useState(false);
+  const [isTriggeringPayout, setIsTriggeringPayout] = useState(false);
   const [eligible, setEligible] = useState(false);
+  const [isPoolMember, setIsPoolMember] = useState(false);
+  const [hasContributed, setHasContributed] = useState(false);
+  const [roundPaid, setRoundPaid] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [countdown, setCountdown] = useState('');
+  const [contributorsCount, setContributorsCount] = useState(0);
+  const [totalRaised, setTotalRaised] = useState('0');
+  const [balanceToTarget, setBalanceToTarget] = useState('0');
+  const [allContributorsPaid, setAllContributorsPaid] = useState(false);
 
+  // Sync thirdweb connection state with local state
   useEffect(() => {
-    if (!address) return;
+    if (activeAccount?.address && activeWallet) {
+      console.log('Thirdweb wallet connected:', activeAccount.address);
+      setAccount(activeAccount.address);
+      setIsConnected(true);
+      
+      // Create web3 instance if it doesn't exist
+      if (window.ethereum) {
+        const Web3 = require('web3');
+        const web3Instance = new Web3(window.ethereum);
+        setWeb3(web3Instance);
+      }
+      setLoading(false);
+    } else {
+      console.log('Thirdweb wallet disconnected');
+      // Redirect to home if not connected
+      router.push('/');
+    }
+  }, [activeAccount, activeWallet, router]);
+
+  // Load pool data when connected and address is available
+  useEffect(() => {
+    if (!isConnected || !web3 || !account || !address) return;
+
     (async () => {
       try {
-        const w3 = await getWeb3();
-        if (!w3) {
-          toast.error('Please install MetaMask');
-          setLoading(false);
-          return;
-        }
-        setWeb3(w3);
-        const accounts = await w3.eth.requestAccounts();
-        if (!accounts || accounts.length === 0) {
-          toast.error('Please connect your wallet');
-          setLoading(false);
+        // Check if user is a tree member
+        const member = await isTreeMember(web3, account);
+        setIsMember(member);
+        
+        // If user is not a member, redirect to home page
+        if (!member) {
           router.push('/');
           return;
         }
-        setAccount(accounts[0]);
-        const [owner, depth] = await Promise.all([
-          isTreeOwner(w3, accounts?.[0]),
-          hasTwoLevelDownline(w3, accounts?.[0])
-        ]);
-        setEligible(Boolean(owner || depth));
-        const p = getRoscaPool(w3, address);
+
+        const owner = await isTreeOwner(web3, account);
+        setEligible(Boolean(owner));
+        
+        const p = getRoscaPool(web3, address);
         setPool(p);
-        const poolInfo = await p.methods.poolInfo().call();
-        const tok = poolInfo.token || poolInfo[0];
-        const size = poolInfo.size || poolInfo[1];
-        const contribution = poolInfo.contribution || poolInfo[2];
-        const roundDuration = poolInfo.roundDuration || poolInfo[3];
-        const startTime = poolInfo.startTime || poolInfo[4];
-        const currentRound = poolInfo.currentRound || poolInfo[5];
-        const currentRecipient = poolInfo.currentRecipient || poolInfo[6];
-        const roundEndsAt = poolInfo.roundEndsAt || poolInfo[7];
+        
+        // Check if current user is a member of this pool
+        const memberStatus = await p.methods.isMember(account).call();
+        setIsPoolMember(Boolean(memberStatus));
+        
+        // Try to get values using individual getter functions first (most reliable)
+        let size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt;
+        
+        try {
+          size = await p.methods.size().call();
+          contribution = await p.methods.contribution().call();
+          roundDuration = await p.methods.roundDuration().call();
+          startTime = await p.methods.startTime().call();
+          currentRound = await p.methods.currentRound().call();
+          currentRecipient = await p.methods.currentRecipient().call();
+          
+          // Calculate roundEndsAt
+          roundEndsAt = Number(startTime) + ((Number(currentRound) + 1) * Number(roundDuration));
+          
+          console.log('Using individual getters - values:', { size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt });
+        } catch (error) {
+          console.log('Individual getters failed, trying poolInfo:', error);
+          
+          // Fallback to poolInfo method
+          const poolInfo = await p.methods.poolInfo().call();
+          console.log('PoolInfo raw:', poolInfo);
+          console.log('PoolInfo keys:', Object.keys(poolInfo));
+          console.log('PoolInfo values:', Object.values(poolInfo));
+          
+          // Try to get values by their named properties first (most reliable)
+          size = poolInfo.size;
+          contribution = poolInfo.contribution;
+          roundDuration = poolInfo.roundDuration;
+          startTime = poolInfo.startTime;
+          currentRound = poolInfo.currentRound;
+          currentRecipient = poolInfo.currentRecipient;
+          roundEndsAt = poolInfo.roundEndsAt;
+          
+          // If named properties don't exist, fall back to array indexing
+          if (size === undefined) {
+            console.log('Using array indexing fallback');
+            // Handle both old and new contract formats
+            // Old format: [token, size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt]
+            // New format: [size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt]
+            
+            // Check if this is the old format (has token address)
+            if (poolInfo[0] && poolInfo[0].startsWith('0x') && poolInfo[0].length === 42) {
+              // Old format - token is at index 0
+              size = poolInfo[1];
+              contribution = poolInfo[2];
+              roundDuration = poolInfo[3];
+              startTime = poolInfo[4];
+              currentRound = poolInfo[5];
+              currentRecipient = poolInfo[6];
+              roundEndsAt = poolInfo[7];
+            } else {
+              // New format - no token
+              size = poolInfo[0];
+              contribution = poolInfo[1];
+              roundDuration = poolInfo[2];
+              startTime = poolInfo[3];
+              currentRound = poolInfo[4];
+              currentRecipient = poolInfo[5];
+              roundEndsAt = poolInfo[6];
+            }
+          }
+        }
+        
+        console.log('Final parsed values:', { size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt });
+        console.log('Size type:', typeof size, 'Value:', size);
+        console.log('Contribution type:', typeof contribution, 'Value:', contribution);
+        console.log('RoundDuration type:', typeof roundDuration, 'Value:', roundDuration);
+        
+        // Check if current user has already contributed to this round (after we have currentRound)
+        if (Boolean(memberStatus) && currentRound !== undefined) {
+          try {
+            const contributed = await p.methods.hasContributed(currentRound, account).call();
+            setHasContributed(Boolean(contributed));
+            console.log('User contribution status for round', currentRound, ':', contributed);
+          } catch (error) {
+            console.log('Error checking contribution status:', error);
+            setHasContributed(false);
+          }
+        }
+        
+        // Check if current round has been paid out
+        if (currentRound !== undefined) {
+          try {
+            const paid = await p.methods.paid(currentRound).call();
+            setRoundPaid(Boolean(paid));
+            console.log('Round', currentRound, 'paid status:', paid);
+          } catch (error) {
+            console.log('Error checking round paid status:', error);
+            setRoundPaid(false);
+          }
+        }
+        
+        // Validate that size is a reasonable number (should be 2-12 for ROSCA pools)
+        if (size && (size < 2 || size > 12)) {
+          console.warn('Size seems invalid:', size, '- expected 2-12');
+        }
+        
+        // Validate that currentRecipient is a valid address
+        if (currentRecipient && (!currentRecipient.startsWith('0x') || currentRecipient.length !== 42)) {
+          console.warn('CurrentRecipient seems invalid:', currentRecipient);
+        }
         const ord = await p.methods.getPayoutOrder().call();
-        setToken(tok);
+        // Try to detect if this is an old contract with token or new contract with ETH
+        let tokenAddress = '0x0000000000000000000000000000000000000000'; // Default to ETH
+        
+        try {
+          // Try to call token() function - if it exists, this is an old contract
+          const token = await p.methods.token().call();
+          if (token && token !== '0x0000000000000000000000000000000000000000') {
+            tokenAddress = token;
+          }
+        } catch (error) {
+          // token() function doesn't exist, so this is a new ETH contract
+          console.log('No token() function found - using ETH');
+        }
+        
+        setToken(tokenAddress);
         setInfo({ size, contribution, roundDuration, startTime, currentRound, currentRecipient, roundEndsAt });
         setOrder(ord);
+        
+        // Calculate contribution statistics
         try {
-          const erc = getErc20(w3, tok);
-          // Not all tokens expose decimals, but USDC does. Guard try.
-          if (erc.methods.decimals) {
-            const d = await erc.methods.decimals().call();
-            setDecimals(Number(d));
+          // Get total contributed for current round
+          const totalContributed = await p.methods.totalContributed(currentRound).call();
+          setTotalRaised(totalContributed);
+          
+          // Calculate contributors count by checking each member
+          let contributors = 0;
+          let allPaid = true;
+          for (let i = 0; i < size; i++) {
+            try {
+              const hasContributed = await p.methods.hasContributed(currentRound, ord[i]).call();
+              if (hasContributed) {
+                contributors++;
+              } else {
+                allPaid = false; // If any member hasn't contributed, not all have paid
+              }
+            } catch (error) {
+              console.log('Error checking contribution for member', ord[i], error);
+              allPaid = false; // Assume not paid if there's an error
+            }
           }
-        } catch {}
+          setContributorsCount(contributors);
+          setAllContributorsPaid(allPaid && contributors === size); // All must have contributed AND count must equal size
+          
+          // Calculate balance to target (total needed - total raised)
+          const totalNeeded = web3.utils.toBN(contribution).mul(web3.utils.toBN(size));
+          const raised = web3.utils.toBN(totalContributed);
+          const balance = totalNeeded.sub(raised);
+          setBalanceToTarget(balance.toString());
+          
+          console.log('Contribution stats:', {
+            contributors,
+            totalRaised: totalContributed,
+            balanceToTarget: balance.toString(),
+            totalNeeded: totalNeeded.toString(),
+            allContributorsPaid: allPaid && contributors === size
+          });
+        } catch (error) {
+          console.log('Error calculating contribution statistics:', error);
+        }
       } catch (e) {
         toast.error(e.message || 'Error loading pool');
-      } finally {
-        setLoading(false);
       }
     })();
-  }, [address]);
+  }, [isConnected, web3, account, address]);
+
+  // Update countdown every second
+  useEffect(() => {
+    if (!info?.startTime) return;
+    
+    const updateCountdown = () => {
+      setCountdown(calculateCountdown(info.startTime));
+    };
+    
+    // Update immediately
+    updateCountdown();
+    
+    // Update every second
+    const interval = setInterval(updateCountdown, 1000);
+    
+    return () => clearInterval(interval);
+  }, [info?.startTime]);
 
   const approveAndContribute = async () => {
     if (!web3 || !pool || !account || !info) return;
     setIsContributing(true);
     try {
-      const erc = getErc20(web3, token);
-      // Approve contribution to pool
-      await erc.methods.approve(address, info.contribution).send({ from: account });
-      // Contribute
-      await pool.methods.contribute().send({ from: account });
-      toast.success('Contribution submitted');
+      // Check if user has already contributed this round
+      const hasContributed = await pool.methods.hasContributed(info.currentRound, account).call();
+      if (hasContributed) {
+        toast.error('You have already contributed to this round');
+        return;
+      }
+      
+      // Check if pool has started by comparing current time with start time
+      const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+      const startTime = Number(info.startTime);
+      
+      if (currentTime < startTime) {
+        toast.error('Pool has not started yet');
+        return;
+      }
+      
+      // Debug information
+      console.log('Current time (JS):', currentTime);
+      console.log('Start time (contract):', startTime);
+      console.log('Time difference (seconds):', currentTime - startTime);
+      console.log('Pool should be open:', currentTime >= startTime);
+      
+      // Optional: Check contract's roundOpen function for debugging
+      try {
+        const roundOpen = await pool.methods.roundOpen().call();
+        console.log('Contract roundOpen result:', roundOpen);
+        console.log('Contract block.timestamp vs JS time difference:', roundOpen ? 'Contract thinks pool is open' : 'Contract thinks pool is closed');
+      } catch (error) {
+        console.log('roundOpen check failed:', error);
+      }
+      
+      // Check if this is an old contract (uses tokens) or new contract (uses ETH)
+      if (token !== '0x0000000000000000000000000000000000000000') {
+        // Old contract - use ERC20 tokens
+        const erc = getErc20(web3, token);
+        
+        // Check user's token balance
+        const balance = await erc.methods.balanceOf(account).call();
+        if (web3.utils.toBN(balance).lt(web3.utils.toBN(info.contribution))) {
+          toast.error('Insufficient token balance for contribution');
+          return;
+        }
+        
+        // Check current allowance
+        const allowance = await erc.methods.allowance(account, address).call();
+        if (web3.utils.toBN(allowance).lt(web3.utils.toBN(info.contribution))) {
+          // Approve contribution to pool
+          await erc.methods.approve(address, info.contribution).send({ from: account });
+        }
+        
+        // Contribute
+        await pool.methods.contribute().send({ from: account });
+      } else {
+        // New contract - use ETH
+        // Check user's ETH balance
+        const balance = await web3.eth.getBalance(account);
+        if (web3.utils.toBN(balance).lt(web3.utils.toBN(info.contribution))) {
+          toast.error('Insufficient ETH balance for contribution');
+          return;
+        }
+        
+        // Contribute with ETH
+        await pool.methods.contribute().send({ 
+          from: account, 
+          value: info.contribution 
+        });
+      }
+      toast.success('Contribution submitted successfully');
+      
+      // Update contribution status
+      setHasContributed(true);
+      
+      // Refresh pool data
+      window.location.reload();
     } catch (e) {
+      console.error('Contribution error:', e);
       if (e?.code === 4001) {
         toast.error('User rejected transaction');
       } else if ((e?.message || '').toLowerCase().includes('insufficient')) {
-        toast.error('Insufficient token or gas. Please top up and try again.');
+        toast.error('Insufficient ETH or gas. Please top up and try again.');
+      } else if ((e?.message || '').toLowerCase().includes('not member')) {
+        toast.error('You are not a member of this pool');
+      } else if ((e?.message || '').toLowerCase().includes('already paid')) {
+        toast.error('You have already contributed to this round');
+      } else if ((e?.message || '').toLowerCase().includes('not started')) {
+        toast.error('Pool has not started yet');
+      } else if ((e?.message || '').toLowerCase().includes('incorrect amount')) {
+        toast.error('Incorrect contribution amount. Please check the required amount.');
       } else {
         toast.error(e.message || 'Contribution failed');
       }
@@ -98,10 +365,16 @@ export default function PoolDetail() {
 
   const triggerPayout = async () => {
     if (!web3 || !pool || !account) return;
-    setIsContributing(true);
+    setIsTriggeringPayout(true);
     try {
       await pool.methods.triggerPayout().send({ from: account });
       toast.success('Payout triggered');
+      
+      // Update round paid status
+      setRoundPaid(true);
+      
+      // Refresh pool data to show updated round
+      window.location.reload();
     } catch (e) {
       if (e?.code === 4001) {
         toast.error('User rejected transaction');
@@ -109,17 +382,19 @@ export default function PoolDetail() {
         toast.error(e.message || 'Payout failed');
       }
     } finally {
-      setIsContributing(false);
+      setIsTriggeringPayout(false);
     }
   };
+
+
 
   const fmt = (v) => {
     try {
       if (!web3) return v;
-      // contribution uses token decimals; format roughly
-      const base = web3.utils.toBN(10).pow(web3.utils.toBN(decimals));
+      // Convert wei to ETH (18 decimals)
+      const base = web3.utils.toBN(10).pow(web3.utils.toBN(18));
       const whole = web3.utils.toBN(v).div(base).toString();
-      const frac = web3.utils.toBN(v).mod(base).toString().padStart(decimals, '0').slice(0, 2);
+      const frac = web3.utils.toBN(v).mod(base).toString().padStart(18, '0').slice(0, 2);
       return `${whole}.${frac}`;
     } catch {
       return String(v);
@@ -134,6 +409,43 @@ export default function PoolDetail() {
       return `${s.slice(0, 6)}...${s.slice(-4)}`;
     }
     return `${s.slice(0, 6)}...${s.slice(-4)}`;
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'Not set';
+    try {
+      const date = new Date(Number(timestamp) * 1000);
+      return date.toLocaleString();
+    } catch {
+      return 'Invalid date';
+    }
+  };
+
+  const calculateCountdown = (startTime) => {
+    if (!startTime) return '';
+    
+    const now = Math.floor(Date.now() / 1000);
+    const start = Number(startTime);
+    const diff = start - now;
+    
+    if (diff <= 0) {
+      return 'Pool has started!';
+    }
+    
+    const days = Math.floor(diff / (24 * 60 * 60));
+    const hours = Math.floor((diff % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((diff % (60 * 60)) / 60);
+    const seconds = diff % 60;
+    
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
   };
 
   const cardStyle = {
@@ -163,8 +475,21 @@ export default function PoolDetail() {
     whiteSpace: 'normal'
   };
 
+  if (loading) {
+    return <LayoutLoading />;
+  }
+
+  // Give thirdweb more time to initialize before showing loading
+  if (!isConnected && (activeAccount === undefined || activeWallet === undefined)) {
+    return <LayoutLoading />;
+  }
+
+  if (!isConnected) {
+    return <LayoutLoading />;
+  }
+
   return (
-    <LayoutWithHeader showSignout={true}>
+    <LayoutWithHeader showSignout={true} isMember={isMember}>
       <ToastContainer position="top-center" />
       <div style={cardStyle}>
         <h3 style={{ marginTop: 0, marginBottom: 8, color: '#2d3436' }}>Pool</h3>
@@ -173,30 +498,98 @@ export default function PoolDetail() {
           <p>Loading...</p>
         ) : (
           <>
-            {!eligible && (
-              <p style={{ color: '#e67e22', marginBottom: 12 }}>You can view this pool, but you need at least 2 levels of downliners to contribute or trigger payouts.</p>
-            )}
-            <div style={rowStyle}><div style={keyStyle}>Token</div><div style={valStyle} title={token}>{shorten(token)}</div></div>
-            <div style={rowStyle}><div style={keyStyle}>Size</div><div style={valStyle}>{info.size}</div></div>
-            <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Currency</div><div style={valStyle}>{token === '0x0000000000000000000000000000000000000000' ? 'ETH (Native)' : `Token: ${shorten(token)}`}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Pool Size</div><div style={valStyle}>{info.size}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)} ETH</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Start date</div><div style={valStyle}>{formatDate(info.startTime)}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Time until start</div><div style={valStyle}>
+              <span style={{ 
+                color: countdown === 'Pool has started!' ? '#00b894' : '#e17055',
+                fontWeight: countdown === 'Pool has started!' ? 600 : 500
+              }}>
+                {countdown || 'Calculating...'}
+              </span>
+            </div></div>
             <div style={rowStyle}><div style={keyStyle}>Current round</div><div style={valStyle}>{Number(info.currentRound)}</div></div>
             <div style={rowStyle}><div style={keyStyle}>Current recipient</div><div style={valStyle} title={info.currentRecipient}>{shorten(info.currentRecipient)}</div></div>
-            <div style={{ margin: '16px 0', display: 'grid', gap: 12 }}>
-              <button disabled={isContributing || !eligible} onClick={approveAndContribute} style={{
-                padding: '10px 14px',
-                background: (isContributing || !eligible) ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
-                border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
+            
+            {/* Contribution Statistics */}
+            <div style={{ 
+              margin: '20px 0', 
+              padding: '16px', 
+              background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', 
+              borderRadius: 12, 
+              border: '1px solid #dee2e6' 
+            }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#2d3436', fontSize: 16, fontWeight: 600 }}>Round {Number(info.currentRound)} Progress</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16 }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: '#00b894' }}>{contributorsCount}</div>
+                  <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Contributors</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: '#00b894' }}>{fmt(totalRaised)}</div>
+                  <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Total Raised (ETH)</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: '#e17055' }}>{fmt(balanceToTarget)}</div>
+                  <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Balance to Target (ETH)</div>
+                </div>
+              </div>
+              <div style={{ 
+                marginTop: 12, 
+                padding: '8px 12px', 
+                background: 'white', 
+                borderRadius: 8, 
+                border: '1px solid #dee2e6',
+                textAlign: 'center'
               }}>
-                {isContributing ? 'Processing...' : 'Approve & Contribute'}
-              </button>
-              <button disabled={isContributing || !eligible} onClick={triggerPayout} style={{
-                padding: '10px 14px',
-                background: (isContributing || !eligible) ? '#e9ecef' : 'linear-gradient(135deg, #00cec9 0%, #00b894 100%)',
-                border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
-              }}>
-                {isContributing ? 'Processing...' : 'Trigger Payout'}
-              </button>
+                <div style={{ fontSize: 14, color: '#636e72' }}>
+                  Target: <span style={{ fontWeight: 600, color: '#2d3436' }}>{fmt(web3?.utils?.toBN(info.contribution).mul(web3.utils.toBN(info.size)).toString() || '0')} ETH</span>
+                </div>
+              </div>
             </div>
+            
+            {isPoolMember ? (
+              <div style={{ margin: '16px 0', display: 'grid', gap: 12 }}>
+                {hasContributed ? (
+                  <div style={{ padding: '10px 14px', background: '#e9ecef', borderRadius: 10, color: '#6c757d', fontWeight: 700, textAlign: 'center' }}>
+                    ✓ Already Contributed to Round {Number(info.currentRound)}
+                  </div>
+                ) : (
+                  <button disabled={isContributing || isTriggeringPayout} onClick={approveAndContribute} style={{
+                    padding: '10px 14px',
+                    background: (isContributing || isTriggeringPayout) ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
+                    border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
+                  }}>
+                    {isContributing ? 'Processing...' : token === '0x0000000000000000000000000000000000000000' ? 'Approve & Contribute' : 'Approve & Contribute'}
+                  </button>
+                )}
+                {roundPaid ? (
+                  <div style={{ padding: '10px 14px', background: '#e9ecef', borderRadius: 10, color: '#6c757d', fontWeight: 700, textAlign: 'center' }}>
+                    ✓ Payout Completed for Round {Number(info.currentRound)}
+                  </div>
+                ) : !allContributorsPaid ? (
+                  <div style={{ padding: '10px 14px', background: '#fff3cd', borderRadius: 10, color: '#856404', fontWeight: 700, textAlign: 'center' }}>
+                    ⏳ Waiting for all contributors ({contributorsCount}/{info.size})
+                  </div>
+                ) : (
+                  <button disabled={isContributing || isTriggeringPayout} onClick={triggerPayout} style={{
+                    padding: '10px 14px',
+                    background: (isContributing || isTriggeringPayout) ? '#e9ecef' : 'linear-gradient(135deg, #00cec9 0%, #00b894 100%)',
+                    border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
+                  }}>
+                    {isTriggeringPayout ? 'Processing...' : 'Trigger Payout'}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ margin: '16px 0', padding: '12px', background: '#f8f9fa', borderRadius: 8, border: '1px solid #e9ecef' }}>
+                <p style={{ margin: 0, color: '#6c757d', fontSize: 14, textAlign: 'center' }}>
+                  You are not a member of this pool. Only pool members can contribute and trigger payouts.
+                </p>
+              </div>
+            )}
             <div>
               <p style={{ color: '#2d3436', fontWeight: 600 }}>Payout order</p>
               <ol style={{ marginTop: 8 }}>

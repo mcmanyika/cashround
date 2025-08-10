@@ -3,7 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { LayoutWithHeader } from '../../src/components/layout/Layout';
 import { getWeb3, getWeb3FromThirdwebWallet, getFactory, hasTwoLevelDownline, isTreeOwner } from '../../src/rosca/services/rosca';
-import { getDefaultUsdcForChain } from '../../src/rosca/config/tokens';
+import { getDefaultTokenForChain } from '../../src/rosca/config/tokens';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_POOL_FACTORY_ADDRESS || '';
@@ -17,7 +17,7 @@ export default function CreatePool() {
   const [factory, setFactory] = useState(null);
   const [token, setToken] = useState('');
   const [size, setSize] = useState(5);
-  const [contribution, setContribution] = useState('0');
+  const [contribution, setContribution] = useState('1'); // Default to 1 ETH
   const [roundDuration, setRoundDuration] = useState(30 * 24 * 60 * 60);
   const [startTime, setStartTime] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -42,7 +42,7 @@ export default function CreatePool() {
       setAccount(acct);
       try {
         const netId = await w3.eth.net.getId();
-        const suggested = getDefaultUsdcForChain(netId);
+        const suggested = getDefaultTokenForChain(netId);
         if (suggested) setToken(suggested);
       } catch {}
       if (!FACTORY_ADDRESS) {
@@ -50,14 +50,8 @@ export default function CreatePool() {
         return;
       }
       setFactory(getFactory(w3, FACTORY_ADDRESS));
-      // Check eligibility (Tree creator OR needs 2-level downline)
-      try {
-        const [owner, depth] = await Promise.all([
-          isTreeOwner(w3, acct),
-          hasTwoLevelDownline(w3, acct)
-        ]);
-        setEligible(Boolean(owner || depth));
-      } catch { setEligible(false); }
+      // Allow attempt to create; contract enforces final rule
+      setEligible(true);
       // Set default start time on client to avoid SSR hydration drift
       try {
         setMounted(true);
@@ -72,6 +66,16 @@ export default function CreatePool() {
     if (!web3 || !factory || !account) return;
     setProcessing(true);
     try {
+      // Convert ETH to wei
+      const contributionInWei = web3.utils.toWei(contribution, 'ether');
+      
+      // Validate minimum contribution (1 ETH)
+      if (Number(contribution) < 1) {
+        toast.error('Minimum contribution is 1 ETH');
+        setProcessing(false);
+        return;
+      }
+      
       const payoutOrder = orderCsv
         .split(',')
         .map((s) => s.trim())
@@ -83,15 +87,19 @@ export default function CreatePool() {
       }
       await factory.methods
         .createPool(
-          token,
           Number(size),
-          contribution,
+          contributionInWei, // Use wei value for contract
           Number(roundDuration),
           Number(startTime),
           payoutOrder
         )
         .send({ from: account });
-      toast.success('Pool created');
+      toast.success('Pool created successfully!');
+      
+      // Redirect to pools page after successful creation
+      setTimeout(() => {
+        router.push('/pools');
+      }, 1500); // Wait 1.5 seconds for user to see success message
     } catch (e) {
       if (e?.code === 4001) {
         toast.error('User rejected transaction');
@@ -149,13 +157,11 @@ export default function CreatePool() {
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <h3 style={{ margin: 0, color: '#2d3436' }}>Create Pool</h3>
           <p style={{ margin: '8px 0 0 0', color: '#636e72', fontSize: 13 }}>
-            Set your pool parameters. For USDC (6 decimals), 1 USDC = 1,000,000 units.
+            Set your pool parameters. All amounts are in ETH (minimum 1 ETH per contribution).
           </p>
         </div>
 
         <div style={{ display: 'grid', gap: 14 }}>
-          {/* Hidden token address field; auto-populated via chain or env */}
-          <input type="hidden" value={token} readOnly />
           <div style={{
             background: 'rgba(0, 184, 148, 0.06)',
             border: '1px dashed rgba(0, 184, 148, 0.35)',
@@ -164,12 +170,7 @@ export default function CreatePool() {
             color: '#2d3436',
             fontSize: 13
           }}>
-            Token: USDC {token ? '(auto-detected)' : '(not configured for this chain)'}
-            {!token && (
-              <span style={{ color: '#e67e22', marginLeft: 6 }}>
-                Set NEXT_PUBLIC_USDC_ADDRESS in .env.local
-              </span>
-            )}
+            Currency: ETH (Native Currency)
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -203,17 +204,20 @@ export default function CreatePool() {
           </div>
 
           <div>
-            <div style={labelStyle}>Contribution (token units)</div>
+            <div style={labelStyle}>Contribution (ETH)</div>
             <input
+              type="number"
+              min="1"
+              step="0.01"
               style={inputStyle}
-              placeholder="e.g., 1000000 = 1 USDC"
+              placeholder="e.g., 1.5"
               value={contribution}
               onChange={(e) => setContribution(e.target.value)}
               onFocus={onFocus}
               onBlur={onBlur}
             />
             <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }}>
-              Tip: use token units (raw decimals). For USDC, 10 USDC = 10,000,000.
+              Minimum contribution: 1 ETH. You can use decimals (e.g., 1.5 ETH).
             </div>
           </div>
 

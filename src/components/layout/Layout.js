@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useActiveWallet, useActiveAccount, ConnectButton } from 'thirdweb/react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { getWeb3, isTreeMember } from '../../rosca/services/rosca';
 import { lightTheme } from 'thirdweb/react';
 import { inAppWallet, createWallet } from "thirdweb/wallets";
@@ -81,11 +82,14 @@ export const LayoutLoading = ({ className = '' }) => (
 export const LayoutSignout = ({ className = '' }) => {
   const activeWallet = useActiveWallet();
   const activeAccount = useActiveAccount();
+  const router = useRouter();
   const [showPools, setShowPools] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
+        setIsLoading(true);
         const addr = activeAccount?.address;
         const w3 = await getWeb3();
         if (addr && w3) {
@@ -96,6 +100,8 @@ export const LayoutSignout = ({ className = '' }) => {
         }
       } catch {
         setShowPools(false);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, [activeAccount?.address]);
@@ -120,7 +126,7 @@ export const LayoutSignout = ({ className = '' }) => {
         zIndex: 1000,
       }}
     >
-      {showPools && (
+      {(showPools || router.pathname.startsWith('/pools')) && (
         <Link
           href="/pools"
           style={{
