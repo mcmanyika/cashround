@@ -6,6 +6,7 @@ import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { getWeb3FromThirdwebWallet } from '../../src/rosca/services/rosca';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
 import { getWeb3, getFactory, getRoscaPool, isTreeMember } from '../../src/rosca/services/rosca';
+import Identicon from 'react-identicons';
 
 // NOTE: set this via .env in real usage
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_POOL_FACTORY_ADDRESS || '';
@@ -338,11 +339,22 @@ export default function PoolsIndex() {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                   }
                 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#2d3436' }}>{shorten(p.address)}</span>
-                    <span style={{ color: '#636e72', fontSize: 12 }}>
-                      Pool Size: {String(p.size)} • Contribution: {fmt(p.contribution)} ETH
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      flexShrink: 0
+                    }}>
+                      <Identicon string={p.address} size={32} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#2d3436' }}>{shorten(p.address)}</span>
+                      <span style={{ color: '#636e72', fontSize: 12 }}>
+                        Pool Size: {String(p.size)} • Contribution: {fmt(p.contribution)} ETH
+                      </span>
+                    </div>
                   </div>
                   <div style={{ 
                     display: 'flex', 

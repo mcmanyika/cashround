@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TreeContract from '../../abis/Tree.json';
 import { usePriceContext } from '../../contexts/PriceContext';
+import Identicon from 'react-identicons';
 
 const UserDashboard = ({ web3, account }) => {
   const { calculateUSDValue } = usePriceContext();
@@ -196,15 +197,30 @@ const UserDashboard = ({ web3, account }) => {
             e.target.style.background = 'rgba(0, 184, 148, 0.1)';
           }}
           >
-            <div style={{ fontSize: '12px', color: '#636e72', marginBottom: '4px' }}>Your Address</div>
+            <div style={{ fontSize: '12px', color: '#636e72', marginBottom: '8px' }}>Your Address</div>
             <div style={{ 
-              fontSize: '14px', 
-              fontWeight: '600', 
-              color: '#2d3436',
-              fontFamily: 'monospace',
-              textAlign: 'center'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px'
             }}>
-              {shortenAddress(account)}
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                flexShrink: 0
+              }}>
+                <Identicon string={account} size={32} />
+              </div>
+              <div style={{ 
+                fontSize: '14px', 
+                fontWeight: '600', 
+                color: '#2d3436',
+                fontFamily: 'monospace'
+              }}>
+                {shortenAddress(account)}
+              </div>
             </div>
             <div style={{
               position: 'absolute',
@@ -249,18 +265,41 @@ const UserDashboard = ({ web3, account }) => {
             e.target.style.background = 'rgba(0, 184, 148, 0.1)';
           }}
           >
-            <div style={{ fontSize: '12px', color: '#636e72', marginBottom: '4px' }}>Referred By</div>
+            <div style={{ fontSize: '12px', color: '#636e72', marginBottom: '8px' }}>Referred By</div>
             <div style={{ 
-              fontSize: '14px', 
-              fontWeight: '600', 
-              color: '#2d3436',
-              fontFamily: 'monospace',
-              textAlign: 'center'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px'
             }}>
               {inviter && inviter !== '0x0000000000000000000000000000000000000000' ? (
-                shortenAddress(inviter)
+                <>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    flexShrink: 0
+                  }}>
+                    <Identicon string={inviter} size={32} />
+                  </div>
+                  <div style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#2d3436',
+                    fontFamily: 'monospace'
+                  }}>
+                    {shortenAddress(inviter)}
+                  </div>
+                </>
               ) : (
-                'None'
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600', 
+                  color: '#2d3436'
+                }}>
+                  None
+                </div>
               )}
             </div>
             {inviter && inviter !== '0x0000000000000000000000000000000000000000' && (
