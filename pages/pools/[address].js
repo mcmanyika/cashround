@@ -4,6 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
 import { getWeb3, getRoscaPool, getErc20, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
+import Identicon from 'react-identicons';
 
 export default function PoolDetail() {
   const router = useRouter();
@@ -503,7 +504,29 @@ export default function PoolDetail() {
       <ToastContainer position="top-center" />
       <div style={cardStyle}>
         <h3 style={{ marginTop: 0, marginBottom: 8, color: '#2d3436' }}>Pool</h3>
-        <p style={{ marginTop: 0, color: '#9aa0a6', fontSize: 12 }} title={address}>{shorten(address)}</p>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          gap: '8px', 
+          marginTop: 0 
+        }}>
+          <div style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            flexShrink: 0
+          }}>
+            <Identicon string={address} size={24} />
+          </div>
+          <p style={{ 
+            margin: 0, 
+            color: '#9aa0a6', 
+            fontSize: 12,
+            fontFamily: 'monospace'
+          }} title={address}>{shorten(address)}</p>
+        </div>
         {loading || !info ? (
           <p>Loading...</p>
         ) : (
@@ -521,7 +544,27 @@ export default function PoolDetail() {
               </span>
             </div></div>
             <div style={rowStyle}><div style={keyStyle}>Current round</div><div style={valStyle}>{Number(info.currentRound)}</div></div>
-            <div style={rowStyle}><div style={keyStyle}>Current recipient</div><div style={valStyle} title={info.currentRecipient}>{shorten(info.currentRecipient)}</div></div>
+            <div style={rowStyle}>
+              <div style={keyStyle}>Current recipient</div>
+              <div style={{
+                ...valStyle,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}>
+                  <Identicon string={info.currentRecipient} size={20} />
+                </div>
+                <span title={info.currentRecipient}>{shorten(info.currentRecipient)}</span>
+              </div>
+            </div>
             
             {/* Contribution Statistics */}
             <div style={{ 
@@ -656,9 +699,31 @@ export default function PoolDetail() {
             )}
             <div>
               <p style={{ color: '#2d3436', fontWeight: 600 }}>Payout order</p>
-              <ol style={{ marginTop: 8 }}>
-                {order.map((m) => (
-                  <li key={m} title={m} style={{ fontFamily: 'monospace', fontSize: 13, wordBreak: 'break-all', overflowWrap: 'anywhere', lineHeight: '18px' }}>{shorten(m)}</li>
+              <ol style={{ marginTop: 8, paddingLeft: 0, listStyle: 'none' }}>
+                {order.map((m, index) => (
+                  <li key={m} title={m} style={{ 
+                    fontFamily: 'monospace', 
+                    fontSize: 13, 
+                    wordBreak: 'break-all', 
+                    overflowWrap: 'anywhere', 
+                    lineHeight: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    marginBottom: '8px'
+                  }}>
+                    <span style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      flexShrink: 0
+                    }}>
+                      <Identicon string={m} size={20} />
+                    </span>
+                    <span>{shorten(m)}</span>
+                  </li>
                 ))}
               </ol>
             </div>
