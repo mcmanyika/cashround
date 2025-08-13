@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { getWeb3, isTreeMember } from '../../rosca/services/rosca';
 import { lightTheme } from 'thirdweb/react';
 import { inAppWallet, createWallet } from "thirdweb/wallets";
+import Footer from './Footer';
 
 const wallets = [
   inAppWallet({
@@ -21,11 +22,19 @@ const wallets = [
 const Layout = ({ 
   children, 
   showBackground = true, 
-  className = ''
+  className = '',
+  showFooter = true
 }) => {
   return (
-    <div className={`layout-container ${!showBackground ? 'no-background' : ''} ${className}`}>
-      {children}
+    <div className={`layout-container ${!showBackground ? 'no-background' : ''} ${className}`} style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <div style={{ flex: 1 }}>
+        {children}
+
+      </div>
     </div>
   );
 };
@@ -176,13 +185,46 @@ export const LayoutSignout = ({ className = '' }) => {
 };
 
 // Complete layout with header - reusable across pages
-export const LayoutWithHeader = ({ children, showSignout = false, client, isMember = false }) => {
+export const LayoutWithHeader = ({ children, showSignout = false, client, isMember = false, showFooter = true }) => {
   const activeWallet = useActiveWallet();
   const activeAccount = useActiveAccount();
   const isConnected = activeAccount?.address && activeWallet;
+  const [actualIsMember, setActualIsMember] = useState(false);
+  const [checkingMembership, setCheckingMembership] = useState(true);
+
+  useEffect(() => {
+    const checkMembership = async () => {
+      if (!isConnected || !activeAccount?.address) {
+        setActualIsMember(false);
+        setCheckingMembership(false);
+        return;
+      }
+
+      try {
+        const { getWeb3, isTreeMember } = await import('../../rosca/services/rosca');
+        const web3 = await getWeb3();
+        if (web3) {
+          const member = await isTreeMember(web3, activeAccount.address);
+          setActualIsMember(member);
+        } else {
+          setActualIsMember(false);
+        }
+      } catch (error) {
+        console.error('Error checking membership:', error);
+        setActualIsMember(false);
+      } finally {
+        setCheckingMembership(false);
+      }
+    };
+
+    checkMembership();
+  }, [isConnected, activeAccount?.address]);
+
+  // Use the passed isMember prop if provided, otherwise use detected membership
+  const finalIsMember = isMember !== false ? actualIsMember : isMember;
 
   return (
-    <Layout>
+    <Layout showFooter={showFooter}>
       <LayoutCard>
         {showSignout && isConnected && <LayoutSignout />}
         <LayoutHeader>
@@ -194,10 +236,11 @@ export const LayoutWithHeader = ({ children, showSignout = false, client, isMemb
           </Link>
           <LayoutTitle>Cash Round</LayoutTitle>
           <LayoutSubtitle>
-            {isMember ? "Welcome Back! Continue Earning Rewards." : "Join Our Network And Start Earning Rewards."}
+            {finalIsMember ? "Welcome Back! Continue Earning Rewards." : "Join Our Network And Start Earning Rewards."}
           </LayoutSubtitle>
         </LayoutHeader>
         {children}
+        <Footer />
       </LayoutCard>
     </Layout>
   );
