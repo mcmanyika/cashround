@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
-import { getWeb3, getRoscaPool, getErc20, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
+import { getWeb3, getMukandoPool, getErc20, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
 import Identicon from '../../src/components/common/Identicon';
 
 export default function PoolDetail() {
@@ -76,7 +76,7 @@ export default function PoolDetail() {
         const owner = await isTreeOwner(web3, account);
         setEligible(Boolean(owner));
         
-        const p = getRoscaPool(web3, address);
+        const p = getMukandoPool(web3, address);
         setPool(p);
         
         // Check if current user is a member of this pool
@@ -175,7 +175,7 @@ export default function PoolDetail() {
           }
         }
         
-        // Validate that size is a reasonable number (should be 2-12 for ROSCA pools)
+        // Validate that size is a reasonable number (should be 2-12 for MUKANDO pools)
         if (size && (size < 2 || size > 12)) {
           console.warn('Size seems invalid:', size, '- expected 2-12');
         }

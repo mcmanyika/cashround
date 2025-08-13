@@ -5,8 +5,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { getWeb3FromThirdwebWallet } from '../../src/rosca/services/rosca';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
-import { getWeb3, getFactory, getRoscaPool, isTreeMember } from '../../src/rosca/services/rosca';
-import Identicon from '../../src/components/common/Identicon';
+import { getWeb3, getFactory, getMukandoPool, isTreeMember } from '../../src/rosca/services/rosca';
+
 
 // NOTE: set this via .env in real usage
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_POOL_FACTORY_ADDRESS || '';
@@ -87,7 +87,7 @@ export default function PoolsIndex() {
           const infos = await Promise.all(
             sortedAddrs.map(async (addr) => {
               try {
-                const pool = getRoscaPool(web3, addr);
+                const pool = getMukandoPool(web3, addr);
                 
                 // Try individual getters first (most reliable)
                 try {
@@ -344,10 +344,16 @@ export default function PoolsIndex() {
                       width: '32px',
                       height: '32px',
                       borderRadius: '50%',
-                      overflow: 'hidden',
+                      background: '#00b894',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
                       flexShrink: 0
                     }}>
-                      <Identicon string={p.address} size={32} />
+                      CR
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#2d3436' }}>{shorten(p.address)}</span>

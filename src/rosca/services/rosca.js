@@ -34,7 +34,7 @@ export const getFactory = (web3, factoryAddress) => {
   return new web3.eth.Contract(PoolFactoryAbi.abi, factoryAddress);
 };
 
-export const getRoscaPool = (web3, poolAddress) => {
+export const getMukandoPool = (web3, poolAddress) => {
   return new web3.eth.Contract(RoscaPoolAbi.abi, poolAddress);
 };
 

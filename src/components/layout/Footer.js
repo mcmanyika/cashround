@@ -1,7 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
+import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 
 const Footer = () => {
+  const activeWallet = useActiveWallet();
+  const activeAccount = useActiveAccount();
+  const isConnected = activeAccount?.address && activeWallet;
   return (
     <footer className="footer" style={{
       backgroundColor: '#f8f9fa',
@@ -50,46 +54,50 @@ const Footer = () => {
             }}>
               📄 White Paper
             </Link>
-            <Link href="/pools" style={{
-              color: '#636e72',
-              textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: '500',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              transition: 'all 0.2s ease',
-              border: '1px solid transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
-              e.target.style.borderColor = '#636e72';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.borderColor = 'transparent';
-            }}>
-              💰 Active Pools
-            </Link>
-            <Link href="/pools/create" style={{
-              color: '#636e72',
-              textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: '500',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              transition: 'all 0.2s ease',
-              border: '1px solid transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
-              e.target.style.borderColor = '#636e72';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.borderColor = 'transparent';
-            }}>
-              ➕ Create Pool
-            </Link>
+            {isConnected && (
+              <>
+                <Link href="/pools" style={{
+                  color: '#636e72',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s ease',
+                  border: '1px solid transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
+                  e.target.style.borderColor = '#636e72';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.borderColor = 'transparent';
+                }}>
+                  💰 Active Pools
+                </Link>
+                <Link href="/pools/create" style={{
+                  color: '#636e72',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s ease',
+                  border: '1px solid transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
+                  e.target.style.borderColor = '#636e72';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.borderColor = 'transparent';
+                }}>
+                  ➕ Create Pool
+                </Link>
+              </>
+            )}
           </div>
           
           <div className="footer-brand" style={{
@@ -139,7 +147,7 @@ const Footer = () => {
             color: '#636e72',
             marginTop: '5px'
           }}>
-            © 2025 Cash Round. Decentralized ROSCA Platform.
+            © 2025 Cash Round. Decentralized MUKANDO Platform.
           </div>
         </div>
       </div>
