@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
 import { getWeb3, getRoscaPool, getErc20, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
-import Identicon from 'react-identicons';
+import Identicon from '../../src/components/common/Identicon';
 
 export default function PoolDetail() {
   const router = useRouter();

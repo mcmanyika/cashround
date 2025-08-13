@@ -6,7 +6,7 @@ import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { getWeb3FromThirdwebWallet } from '../../src/rosca/services/rosca';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
 import { getWeb3, getFactory, getRoscaPool, isTreeMember } from '../../src/rosca/services/rosca';
-import Identicon from 'react-identicons';
+import Identicon from '../../src/components/common/Identicon';
 
 // NOTE: set this via .env in real usage
 const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_POOL_FACTORY_ADDRESS || '';

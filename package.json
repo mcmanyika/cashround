@@ -11,6 +11,8 @@
     "export": "next build && next export"
   },
   "dependencies": {
+    "@dicebear/collection": "^9.2.3",
+    "@dicebear/core": "^9.2.3",
     "@openzeppelin/contracts": "^5.4.0",
     "@thirdweb-dev/auth": "^4.1.97",
     "@thirdweb-dev/chains": "^0.1.120",
@@ -28,7 +30,6 @@
     "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-identicons": "^1.2.5",
     "react-toastify": "^8.2.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",

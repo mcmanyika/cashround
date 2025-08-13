@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TreeContract from '../../abis/Tree.json';
 import { usePriceContext } from '../../contexts/PriceContext';
-import Identicon from 'react-identicons';
+import Identicon from '../common/Identicon';
 
 const UserDashboard = ({ web3, account }) => {
   const { calculateUSDValue } = usePriceContext();
