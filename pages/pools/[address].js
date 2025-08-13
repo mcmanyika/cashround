@@ -26,6 +26,7 @@ export default function PoolDetail() {
   const [hasContributed, setHasContributed] = useState(false);
   const [roundPaid, setRoundPaid] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [checkingMember, setCheckingMember] = useState(true);
   const [countdown, setCountdown] = useState('');
   const [contributorsCount, setContributorsCount] = useState(0);
   const [totalRaised, setTotalRaised] = useState('0');
@@ -53,21 +54,23 @@ export default function PoolDetail() {
     }
   }, [activeAccount, activeWallet, router]);
 
-  // Load pool data when connected and address is available
+  // Immediate member check and redirect
   useEffect(() => {
     if (!isConnected || !web3 || !account || !address) return;
 
     (async () => {
       try {
-        // Check if user is a tree member
+        // Check if user is a tree member immediately
         const member = await isTreeMember(web3, account);
         setIsMember(member);
         
-        // If user is not a member, redirect to home page
+        // If user is not a member, redirect immediately without loading any data
         if (!member) {
-          router.push('/');
+          router.replace('/referral'); // Use replace to prevent back button
           return;
         }
+
+        setCheckingMember(false); // Member check complete
 
         const owner = await isTreeOwner(web3, account);
         setEligible(Boolean(owner));
@@ -240,11 +243,13 @@ export default function PoolDetail() {
         } catch (error) {
           console.log('Error calculating contribution statistics:', error);
         }
-      } catch (e) {
-        toast.error(e.message || 'Error loading pool');
+      } catch (error) {
+        console.log('Error loading pool data:', error);
+        setCheckingMember(false);
+        toast.error(error.message || 'Error loading pool');
       }
     })();
-  }, [isConnected, web3, account, address]);
+  }, [isConnected, web3, account, address, router]);
 
   // Update countdown every second
   useEffect(() => {
@@ -488,6 +493,11 @@ export default function PoolDetail() {
     return <LayoutLoading />;
   }
 
+  // Show loading while checking member status
+  if (checkingMember) {
+    return <LayoutLoading />;
+  }
+
   return (
     <LayoutWithHeader showSignout={true} isMember={isMember}>
       <ToastContainer position="top-center" />
@@ -536,16 +546,70 @@ export default function PoolDetail() {
                   <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Balance to Target (ETH)</div>
                 </div>
               </div>
+              {/* Progress Bar */}
               <div style={{ 
-                marginTop: 12, 
-                padding: '8px 12px', 
+                marginTop: 16, 
+                padding: '12px', 
                 background: 'white', 
                 borderRadius: 8, 
-                border: '1px solid #dee2e6',
-                textAlign: 'center'
+                border: '1px solid #dee2e6'
               }}>
-                <div style={{ fontSize: 14, color: '#636e72' }}>
-                  Target: <span style={{ fontWeight: 600, color: '#2d3436' }}>{fmt(web3?.utils?.toBN(info.contribution).mul(web3.utils.toBN(info.size)).toString() || '0')} ETH</span>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  marginBottom: 8 
+                }}>
+                  <span style={{ fontSize: 14, color: '#636e72' }}>Progress</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#2d3436' }}>
+                    {contributorsCount}/{info.size} contributors
+                  </span>
+                </div>
+                
+                {/* Progress Bar Container */}
+                <div style={{
+                  width: '100%',
+                  height: 12,
+                  backgroundColor: '#e9ecef',
+                  borderRadius: 6,
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}>
+                  {/* Progress Bar Fill */}
+                  <div style={{
+                    width: `${Math.min((contributorsCount / info.size) * 100, 100)}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #00b894 0%, #00a085 100%)',
+                    borderRadius: 6,
+                    transition: 'width 0.3s ease',
+                    position: 'relative'
+                  }}>
+                    {/* Progress Bar Shine Effect */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '50%',
+                      background: 'linear-gradient(90deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
+                      borderRadius: '6px 6px 0 0'
+                    }} />
+                  </div>
+                </div>
+                
+                {/* Progress Text */}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  marginTop: 8 
+                }}>
+                  <span style={{ fontSize: 12, color: '#636e72' }}>
+                    Raised: <span style={{ fontWeight: 600, color: '#00b894' }}>{fmt(totalRaised)} ETH</span>
+                  </span>
+                  <span style={{ fontSize: 12, color: '#636e72' }}>
+                    Target: <span style={{ fontWeight: 600, color: '#2d3436' }}>{fmt(web3?.utils?.toBN(info.contribution).mul(web3.utils.toBN(info.size)).toString() || '0')} ETH</span>
+                  </span>
                 </div>
               </div>
             </div>

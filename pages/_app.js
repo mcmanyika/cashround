@@ -6,6 +6,7 @@ import '../src/components/styles/ReferralInfo.css';
 import '../src/components/styles/SendToReferrers.css';
 import '../src/components/styles/UserDashboard.css';
 import '../src/components/layout/Layout.css';
+import '../src/styles/App.module.css'; // Global styles to prevent white flash
 import 'react-toastify/dist/ReactToastify.css';
 import { ThirdwebProvider } from "thirdweb/react";
 

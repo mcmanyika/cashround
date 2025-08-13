@@ -1,5 +1,5 @@
-require('babel-register');
-require('babel-polyfill');
+require('@babel/register');
+require('@babel/polyfill');
 require('dotenv').config();
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
@@ -71,16 +71,16 @@ module.exports = {
   contracts_build_directory: './src/abis/',
   compilers: {
     solc: {
-      version: "0.8.0",
+      version: "0.8.22",
       optimizer: {
         enabled: true,
         runs: 200
       }
     }
   },
-  plugins: ["truffle-plugin-verify"],
-  api_keys: {
-    etherscan: process.env.ETHERSCAN_API_KEY,
-    polygonscan: process.env.POLYGONSCAN_API_KEY
-  }
+  // plugins: ["truffle-plugin-verify"],
+  // api_keys: {
+  //   etherscan: process.env.ETHERSCAN_API_KEY,
+  //   polygonscan: process.env.POLYGONSCAN_API_KEY
+  // }
 }

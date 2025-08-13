@@ -94,7 +94,7 @@ export default function Home() {
   useEffect(() => {
     if (activeAccount?.address && wallet) {
       console.log('User connected, redirecting to referral page...');
-      router.push('/referral');
+      router.push('/pools');
     }
   }, [activeAccount, wallet, router]);
 

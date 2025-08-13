@@ -23,6 +23,9 @@ export default function PoolsIndex() {
   const [loading, setLoading] = useState(true);
   const [canCreate, setCanCreate] = useState(true); // show link; eligibility enforced on create page
   const [isMember, setIsMember] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPools, setFilteredPools] = useState([]);
+  const [checkingMember, setCheckingMember] = useState(true);
 
   // Sync thirdweb connection state with local state
   useEffect(() => {
@@ -45,21 +48,23 @@ export default function PoolsIndex() {
     }
   }, [activeAccount, activeWallet, router]);
 
-  // Load pools data when connected
+  // Immediate member check and redirect
   useEffect(() => {
     if (!isConnected || !web3 || !account) return;
 
     (async () => {
       try {
-        // Check if user is a tree member
+        // Check if user is a tree member immediately
         const member = await isTreeMember(web3, account);
         setIsMember(member);
         
-        // If user is not a member, redirect to home page
+        // If user is not a member, redirect immediately without loading any data
         if (!member) {
-          router.push('/');
+          router.replace('/referral'); // Use replace to prevent back button
           return;
         }
+
+        setCheckingMember(false); // Member check complete
 
         if (!FACTORY_ADDRESS) {
           toast.error('Factory address is not configured.');
@@ -120,9 +125,36 @@ export default function PoolsIndex() {
         } catch {}
       } catch (e) {
         toast.error(e.message || 'Error loading pools');
+        setCheckingMember(false);
       }
     })();
-  }, [isConnected, web3, account]);
+  }, [isConnected, web3, account, router]);
+
+  // Reset checking member state when connection changes
+  useEffect(() => {
+    if (!isConnected) {
+      setCheckingMember(false);
+    }
+  }, [isConnected]);
+
+  // Filter pools based on search term
+  useEffect(() => {
+    if (!poolsData.length) {
+      setFilteredPools([]);
+      return;
+    }
+
+    if (!searchTerm.trim()) {
+      setFilteredPools(poolsData);
+      return;
+    }
+
+    const filtered = poolsData.filter(pool => 
+      pool.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pool.address.toLowerCase().startsWith(searchTerm.toLowerCase())
+    );
+    setFilteredPools(filtered);
+  }, [poolsData, searchTerm]);
 
   const cardStyle = {
     maxWidth: 640,
@@ -170,6 +202,11 @@ export default function PoolsIndex() {
     return <LayoutLoading />;
   }
 
+  // Show loading while checking member status
+  if (checkingMember) {
+    return <LayoutLoading />;
+  }
+
   return (
     <LayoutWithHeader showSignout={true} isMember={isMember}>
       <ToastContainer position="bottom-center" />
@@ -177,23 +214,153 @@ export default function PoolsIndex() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <h2 style={{ margin: 0, color: '#2d3436' }}>Available Pools</h2>
           {canCreate && (
-            <Link href="/pools/create" style={{ fontWeight: 700, color: '#00b894', whiteSpace: 'nowrap' }}>+ Create</Link>
+            <Link href="/pools/create" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              fontWeight: 700, 
+              color: '#00b894', 
+              whiteSpace: 'nowrap',
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: 8,
+              background: 'rgba(0, 184, 148, 0.1)',
+              transition: 'all 0.2s ease'
+            }}>
+              <span style={{ fontSize: '18px' }}>➕</span>
+              Create Pool
+            </Link>
           )}
         </div>
+        
+        {/* Search Bar */}
+        <div style={{ 
+          marginTop: 16, 
+          marginBottom: 16,
+          position: 'relative'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: '#f8f9fa',
+            border: '1px solid #e9ecef',
+            borderRadius: 8,
+            padding: '8px 12px',
+            transition: 'all 0.2s ease'
+          }}>
+            <span style={{ 
+              fontSize: '16px', 
+              marginRight: 8, 
+              color: '#636e72' 
+            }}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search by pool address..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                outline: 'none',
+                fontSize: '14px',
+                color: '#2d3436',
+                width: '100%',
+                fontFamily: 'monospace'
+              }}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  color: '#636e72',
+                  padding: '4px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
         <div style={{ marginTop: 12 }}>
           {pools.length === 0 ? (
             <p style={{ margin: '8px 0 12px 0' }}>No pools found.</p>
+          ) : filteredPools.length === 0 && searchTerm ? (
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '20px',
+              color: '#636e72'
+            }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔍</div>
+              <p style={{ margin: '0 0 8px 0' }}>No pools found matching &quot;{searchTerm}&quot;</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                style={{
+                  padding: '6px 12px',
+                  background: '#00b894',
+                  border: 'none',
+                  borderRadius: 6,
+                  color: 'white',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                Clear Search
+              </button>
+            </div>
           ) : (
-            poolsData.map((p) => (
-              <div key={p.address} style={itemStyle}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: 'monospace', fontSize: 14 }}>{shorten(p.address)}</span>
-                  <span style={{ color: '#636e72', fontSize: 12 }}>
-                    Pool Size: {String(p.size)} • Contribution: {fmt(p.contribution)} ETH
-                  </span>
+            filteredPools.map((p) => (
+              <Link 
+                key={p.address} 
+                href={`/pools/${p.address}`}
+                style={{ 
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'block'
+                }}
+              >
+                <div style={{
+                  ...itemStyle,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  borderRadius: 8,
+                  ':hover': {
+                    background: '#f8f9fa',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#2d3436' }}>{shorten(p.address)}</span>
+                    <span style={{ color: '#636e72', fontSize: 12 }}>
+                      Pool Size: {String(p.size)} • Contribution: {fmt(p.contribution)} ETH
+                    </span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 6, 
+                    color: '#00a085', 
+                    fontWeight: 700, 
+                    whiteSpace: 'nowrap',
+                    padding: '6px 10px',
+                    borderRadius: 6,
+                    background: 'rgba(0, 160, 133, 0.1)',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    <span style={{ fontSize: '16px' }}>🔍</span>
+                    View
+                  </div>
                 </div>
-                <Link href={`/pools/${p.address}`} style={{ color: '#00a085', fontWeight: 700, whiteSpace: 'nowrap' }}>Open</Link>
-              </div>
+              </Link>
             ))
           )}
         </div>

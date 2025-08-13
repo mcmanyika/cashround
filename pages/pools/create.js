@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { useRouter } from 'next/router';
-import { LayoutWithHeader } from '../../src/components/layout/Layout';
-import { getWeb3, getWeb3FromThirdwebWallet, getFactory, hasTwoLevelDownline, isTreeOwner } from '../../src/rosca/services/rosca';
+import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
+import { getWeb3, getWeb3FromThirdwebWallet, getFactory, hasTwoLevelDownline, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
 import { getDefaultTokenForChain } from '../../src/rosca/config/tokens';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 
@@ -24,6 +24,7 @@ export default function CreatePool() {
   const [orderCsv, setOrderCsv] = useState('');
   const [processing, setProcessing] = useState(false);
   const [eligible, setEligible] = useState(false);
+  const [checkingMember, setCheckingMember] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -50,8 +51,18 @@ export default function CreatePool() {
         return;
       }
       setFactory(getFactory(w3, FACTORY_ADDRESS));
+      
+      // Check if user is a tree member immediately
+      const member = await isTreeMember(w3, acct);
+      if (!member) {
+        toast.error('You must be a member to create pools');
+        router.replace('/referral'); // Use replace to prevent back button
+        return;
+      }
+      
       // Allow attempt to create; contract enforces final rule
       setEligible(true);
+      setCheckingMember(false);
       // Set default start time on client to avoid SSR hydration drift
       try {
         setMounted(true);
@@ -60,7 +71,7 @@ export default function CreatePool() {
         }
       } catch {}
     })();
-  }, [activeWallet, activeAccount?.address]);
+  }, [activeWallet, activeAccount?.address, router, startTime]);
 
   const create = async () => {
     if (!web3 || !factory || !account) return;
@@ -150,6 +161,11 @@ export default function CreatePool() {
     e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
   };
 
+  // Show loading while checking member status
+  if (checkingMember) {
+    return <LayoutLoading />;
+  }
+
   return (
     <LayoutWithHeader showSignout={true}>
       <ToastContainer position="top-center" />
@@ -189,21 +205,6 @@ export default function CreatePool() {
               />
             </div>
             <div>
-              <div style={labelStyle}>Round duration (seconds)</div>
-              <input
-                type="number"
-                min={60}
-                style={inputStyle}
-                placeholder="e.g., 2592000 (30 days)"
-                value={roundDuration}
-                onChange={(e) => setRoundDuration(e.target.value)}
-                onFocus={onFocus}
-                onBlur={onBlur}
-              />
-            </div>
-          </div>
-
-          <div>
             <div style={labelStyle}>Contribution (ETH)</div>
             <input
               type="number"
@@ -217,23 +218,40 @@ export default function CreatePool() {
               onBlur={onBlur}
             />
             <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }}>
-              Minimum contribution: 1 ETH. You can use decimals (e.g., 1.5 ETH).
+              Minimum contribution: 1 ETH.
+            </div>
+             
             </div>
           </div>
 
           <div>
-            <div style={labelStyle}>Start time (unix)</div>
+          <input
+                type="hidden"
+                min={60}
+                style={inputStyle}
+                placeholder="e.g., 2592000 (30 days)"
+                value={roundDuration}
+                onChange={(e) => setRoundDuration(e.target.value)}
+                onFocus={onFocus}
+                onBlur={onBlur}
+              />
+          </div>
+
+          <div>
+            <div style={labelStyle}>Start time</div>
             <input
-              type="number"
+              type="datetime-local" 
               style={inputStyle}
-              placeholder="e.g., now + 3600"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              value={startTime ? new Date(Number(startTime) * 1000).toISOString().slice(0,16) : ''}
+              onChange={(e) => {
+                const timestamp = Math.floor(new Date(e.target.value).getTime() / 1000);
+                setStartTime(timestamp);
+              }}
               onFocus={onFocus}
               onBlur={onBlur}
             />
-            <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }} suppressHydrationWarning>
-              {mounted && startTime ? new Date(Number(startTime) * 1000).toLocaleString() : ''}
+            <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }}>
+              Select when you want the pool to start
             </div>
           </div>
 

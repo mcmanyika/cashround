@@ -142,6 +142,20 @@ export const LayoutSignout = ({ className = '' }) => {
           Pools
         </Link>
       )}
+      <Link
+        href="/income"
+        style={{
+          color: '#00b894',
+          fontSize: '14px',
+          fontWeight: 700,
+          textDecoration: 'none',
+          padding: '8px 10px',
+          background: 'rgba(0, 184, 148, 0.08)',
+          borderRadius: 8,
+        }}
+      >
+        Earnings
+      </Link>
       <p
         onClick={handleSignout}
         className={`layout-signout ${className}`}
