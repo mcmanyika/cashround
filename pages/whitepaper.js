@@ -22,7 +22,7 @@ export default function Whitepaper() {
               Cash Round: Decentralized ROSCA Platform
             </p>
             <p className="text-gray-500" style={{ textAlign: 'left' }}>
-              Version 1.0 | December 2025
+              Version 1.0 | August 2025
             </p>
             <p className="text-gray-500" style={{ textAlign: 'left' }}>
               Developed by Partson Manyika
