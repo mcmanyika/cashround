@@ -1,3 +1,4 @@
+import React from 'react';
 import Head from 'next/head';
 import { ThirdwebProvider } from "thirdweb/react";
 
@@ -21,14 +22,14 @@ const loadNonCriticalStyles = () => {
 
 function MyApp({ Component, pageProps }) {
   // Load non-critical styles after initial render
-  if (typeof window !== 'undefined') {
+  React.useEffect(() => {
     // Use requestIdleCallback for better performance, fallback to setTimeout
     if (window.requestIdleCallback) {
       window.requestIdleCallback(loadNonCriticalStyles);
     } else {
       setTimeout(loadNonCriticalStyles, 1000);
     }
-  }
+  }, []);
 
   return (
     <>

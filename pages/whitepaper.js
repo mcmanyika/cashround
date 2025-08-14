@@ -11,7 +11,7 @@ export default function Whitepaper() {
         <meta name="description" content="Technical white paper for Mukando - Decentralized MUKANDO platform" />
       </Head>
       
-      <LayoutWithHeader showSignout={false}>
+      <LayoutWithHeader>
         <div className="container px-4 py-8 max-w-4xl" style={{ marginLeft: '0', textAlign: 'left' }}>
           {/* Header */}
           <div className="mb-12" style={{ textAlign: 'left' }}>

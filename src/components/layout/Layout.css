@@ -14,7 +14,6 @@
   overflow-x: hidden;
   overflow-y: auto;
   width: 100%;
-  height: 100vh;
 }
 
 /* Remove background on mobile */
@@ -28,7 +27,7 @@
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
   .layout-container {
-    padding: 0;
+    padding: 10px 0 0 0;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
@@ -81,6 +80,7 @@
   text-align: center;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: fit-content;
+  height: auto;
   overflow: visible;
   position: relative;
   margin: 80px auto 20px auto;
@@ -95,6 +95,7 @@
     margin: 60px auto 10px auto;
     width: 95%;
     min-height: fit-content;
+    height: auto;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     text-align: center;
   }
@@ -104,9 +105,10 @@
   .layout-card {
     border-radius: 12px;
     padding: 16px;
-    margin: 40px auto 8px auto;
+    margin: 50px auto 8px auto;
     width: 95%;
     min-height: fit-content;
+    height: auto;
     text-align: center;
   }
 }

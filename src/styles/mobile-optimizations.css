@@ -361,10 +361,10 @@ select:focus {
   }
   
   .layout-card {
-    margin: 0;
-    width: 100%;
-    max-width: 100%;
-    border-radius: 0;
+    margin: 60px auto 10px auto;
+    width: 95%;
+    max-width: 95%;
+    border-radius: 16px;
     text-align: center;
     display: flex;
     flex-direction: column;
