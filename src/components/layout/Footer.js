@@ -167,7 +167,8 @@ const Footer = () => {
             color: '#636e72',
             marginTop: '5px'
           }}>
-            © {new Date().getFullYear()} Mukando. Decentralized CASH ROUND Platform.
+            © {new Date().getFullYear()} Mukando. 
+            Decentralized <br className="mobile-only" />CASH ROUND Platform.
           </div>
         </div>
       </div>
