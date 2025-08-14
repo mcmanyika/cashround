@@ -72,9 +72,9 @@ const Footer = () => {
             <Link href="/whitepaper" style={{
               color: '#00b894',
               textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: '500',
-              padding: '8px 12px',
+              fontSize: '12px',
+              fontWeight: '600',
+              padding: '6px 10px',
               borderRadius: '6px',
               transition: 'all 0.2s ease',
               border: '1px solid transparent'
@@ -93,9 +93,9 @@ const Footer = () => {
               <Link href="/pools" style={{
                 color: '#636e72',
                 textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: '500',
-                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: '600',
+                padding: '6px 10px',
                 borderRadius: '6px',
                 transition: 'all 0.2s ease',
                 border: '1px solid transparent'
@@ -115,9 +115,9 @@ const Footer = () => {
               <Link href="/pools/create" style={{
                 color: '#636e72',
                 textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: '500',
-                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: '600',
+                padding: '6px 10px',
                 borderRadius: '6px',
                 transition: 'all 0.2s ease',
                 border: '1px solid transparent'
@@ -145,8 +145,8 @@ const Footer = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              fontSize: '16px',
-              fontWeight: 'bold',
+              fontSize: '14px',
+              fontWeight: '700',
               color: '#00b894'
             }}>
               <span style={{
@@ -154,21 +154,22 @@ const Footer = () => {
                 color: 'white',
                 borderRadius: '4px',
                 padding: '2px 6px',
-                fontSize: '12px',
-                fontWeight: 'bold'
+                fontSize: '11px',
+                fontWeight: '700'
               }}>CR</span>
             </div>
             <span style={{
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: '600',
               color: '#2d3436'
             }}>Mukando</span>
           </div>
           
           <div className="footer-copyright" style={{
-            fontSize: '12px',
+            fontSize: '11px',
             color: '#636e72',
-            marginTop: '5px'
+            marginTop: '4px',
+            lineHeight: '1.2'
           }}>
             © {new Date().getFullYear()} Mukando. 
             Decentralized CASH ROUND Platform.
