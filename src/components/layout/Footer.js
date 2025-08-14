@@ -50,17 +50,31 @@ const Footer = () => {
       backgroundColor: '#f8f9fa',
       borderTop: '1px solid #e9ecef',
       padding: '20px 0',
-      marginTop: 'auto',
+      marginTop: '20px',
       textAlign: 'center',
       position: 'relative',
       bottom: 0,
-      width: '100%'
+      width: '100%',
+      // Mobile responsive padding
+      '@media (max-width: 768px)': {
+        padding: '16px 0'
+      },
+      '@media (max-width: 480px)': {
+        padding: '12px 0'
+      }
     }}>
-      <div className="container" style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 20px'
-      }}>
+              <div className="container" style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 20px',
+          // Mobile responsive padding
+          '@media (max-width: 768px)': {
+            padding: '0 16px'
+          },
+          '@media (max-width: 480px)': {
+            padding: '0 12px'
+          }
+        }}>
         <div className="footer-content" style={{
           display: 'flex',
           flexDirection: 'column',
@@ -71,7 +85,16 @@ const Footer = () => {
             display: 'flex',
             gap: '20px',
             flexWrap: 'wrap',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            // Mobile responsive gap
+            '@media (max-width: 768px)': {
+              gap: '16px'
+            },
+            '@media (max-width: 480px)': {
+              gap: '12px',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }
           }}>
             <Link href="/whitepaper" style={{
               color: '#00b894',

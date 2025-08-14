@@ -275,8 +275,28 @@ export default function PoolsIndex() {
     <LayoutWithHeader showSignout={true} isMember={isMember}>
       <ToastContainer position="bottom-center" />
       <div style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          gap: 12, 
+          flexWrap: 'wrap',
+          // Mobile responsive
+          '@media (max-width: 768px)': {
+            flexDirection: 'column',
+            gap: 16
+          }
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12,
+            // Mobile responsive
+            '@media (max-width: 768px)': {
+              flexDirection: 'column',
+              width: '100%'
+            }
+          }}>
             <button
               onClick={() => setShowMyPoolsOnly(!showMyPoolsOnly)}
               style={{
@@ -443,7 +463,7 @@ export default function PoolsIndex() {
                     background: '#f8f9fa',
                     transform: 'translateY(-1px)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }
+                  },
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{

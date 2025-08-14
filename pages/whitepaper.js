@@ -19,7 +19,7 @@ export default function Whitepaper() {
               Technical White Paper
             </h1>
             <p className="text-xl text-gray-600 mb-2" style={{ textAlign: 'left' }}>
-              Mukando: Decentralized MUKANDO Platform
+              Decentralized Cash Round Platform
             </p>
             <p className="text-gray-500" style={{ textAlign: 'left' }}>
               Version 1.0 | August 2025
@@ -89,7 +89,7 @@ export default function Whitepaper() {
               The platform consists of three core components:
             </p>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div className="space-y-4 mb-6">
               <div className="bg-blue-50 p-6 rounded-lg">
                 <h4 className="font-semibold text-blue-900 mb-2">Tree Contract</h4>
                 <p className="text-blue-800 text-sm">
@@ -211,7 +211,7 @@ export default function Whitepaper() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Economic Model</h2>
             
             <h3 className="text-xl font-semibold text-gray-800 mb-3">Pool Economics</h3>
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="space-y-4 mb-6">
               <div className="bg-green-50 p-6 rounded-lg">
                 <h4 className="font-semibold text-green-900 mb-2">Pool Parameters</h4>
                 <ul className="text-green-800 text-sm space-y-1">

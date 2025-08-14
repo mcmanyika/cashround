@@ -33,7 +33,6 @@ const Layout = ({
     }}>
       <div style={{ flex: 1 }}>
         {children}
-
       </div>
     </div>
   );
@@ -236,7 +235,7 @@ export const LayoutWithHeader = ({ children, showSignout = false, client, isMemb
               <LayoutLogoBadge>$</LayoutLogoBadge>
             </LayoutLogo>
           </Link>
-          <LayoutTitle>Mukando</LayoutTitle>
+          <LayoutTitle className="uppercase">Mukando</LayoutTitle>
           <LayoutSubtitle>
             {finalIsMember ? "Welcome Back! Refer And Earn Rewards." : "Join Our Network And Start Earning Rewards."}
           </LayoutSubtitle>

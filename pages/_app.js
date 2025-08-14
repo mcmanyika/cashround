@@ -7,6 +7,7 @@ import '../src/styles/tailwind.css';
 // Import only essential styles for initial load
 import '../src/components/layout/Layout.css';
 import '../src/styles/App.module.css'; // Global styles to prevent white flash
+import '../src/styles/mobile-optimizations.css'; // Mobile optimizations
 
 // Lazy load non-critical styles
 const loadNonCriticalStyles = () => {
@@ -33,7 +34,11 @@ function MyApp({ Component, pageProps }) {
     <>
       <Head>
         <title>Mukando</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="theme-color" content="#00b894" />
         <meta name="description" content="Connect with your referrer and start earning rewards" />
         {/* Preload critical resources */}
         <link rel="dns-prefetch" href="//polygon-rpc.com" />

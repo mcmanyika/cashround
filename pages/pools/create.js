@@ -210,7 +210,16 @@ export default function CreatePool() {
             Currency: ETH (Native Currency)
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: 12,
+            // Mobile responsive
+            '@media (max-width: 768px)': {
+              gridTemplateColumns: '1fr',
+              gap: 16
+            }
+          }}>
             <div>
               <div style={labelStyle}>Pool size</div>
               <input
@@ -247,7 +256,15 @@ export default function CreatePool() {
 
           <div>
             <div style={labelStyle}>Rotation Frequency</div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: 8,
+              // Mobile responsive
+              '@media (max-width: 768px)': {
+                flexDirection: 'column',
+                gap: 12
+              }
+            }}>
               <button
                 type="button"
                 onClick={() => handleRotationFrequencyChange('daily')}
