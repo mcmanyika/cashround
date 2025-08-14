@@ -44,7 +44,7 @@ export default function PoolsIndex() {
         const web3Instance = new Web3(window.ethereum);
         setWeb3(web3Instance);
         
-        // Immediately check membership status to prevent content flash
+        // Keep loading true until membership check is complete
         (async () => {
           try {
             const member = await isTreeMember(web3Instance, activeAccount.address);
@@ -52,14 +52,17 @@ export default function PoolsIndex() {
               router.replace('/referral');
               return;
             }
+            // Only set loading to false if user is confirmed as member
+            setLoading(false);
           } catch (error) {
             console.error('Error checking membership:', error);
             router.replace('/referral');
             return;
           }
         })();
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     } else {
       console.log('Thirdweb wallet disconnected');
       // Redirect to home if not connected

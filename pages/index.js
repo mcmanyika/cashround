@@ -21,6 +21,7 @@ export default function Home() {
   const [checkingReferrer, setCheckingReferrer] = useState(true);
   const [isMember, setIsMember] = useState(false);
   const [copyClicked, setCopyClicked] = useState(false);
+  const [checkingMembership, setCheckingMembership] = useState(false);
 
   const checkReferrerStatus = useCallback(async (web3Instance, accountAddress) => {
     if (!web3Instance || !accountAddress) return;
@@ -96,11 +97,32 @@ export default function Home() {
     }
   }, [checkReferrerStatus]);
 
-  // Redirect to referral page when user connects via thirdweb
+  // Redirect to appropriate page when user connects via thirdweb
   useEffect(() => {
     if (activeAccount?.address && wallet) {
-      console.log('User connected, redirecting to referral page...');
-      router.push('/pools');
+      console.log('User connected, checking membership status...');
+      setCheckingMembership(true);
+      // Check membership status before redirecting
+      (async () => {
+        try {
+          if (window.ethereum) {
+            const Web3 = require('web3');
+            const web3Instance = new Web3(window.ethereum);
+            const { isTreeMember } = await import('../src/rosca/services/rosca');
+            const member = await isTreeMember(web3Instance, activeAccount.address);
+            if (member) {
+              router.push('/pools');
+            } else {
+              router.push('/referral');
+            }
+          } else {
+            router.push('/referral');
+          }
+        } catch (error) {
+          console.error('Error checking membership:', error);
+          router.push('/referral');
+        }
+      })();
     }
   }, [activeAccount, wallet, router]);
 
@@ -120,7 +142,7 @@ export default function Home() {
     }, 500);
   };
 
-  if (loading) {
+  if (loading || checkingMembership) {
     return <LayoutLoading />;
   }
 
