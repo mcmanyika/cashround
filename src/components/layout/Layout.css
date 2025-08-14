@@ -14,21 +14,36 @@
   overflow-y: auto;
 }
 
+/* Remove background on mobile */
+@media (max-width: 768px) {
+  .layout-container {
+    background: transparent;
+    animation: none;
+  }
+}
+
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
   .layout-container {
-    padding: 10px;
-    align-items: flex-start;
-    justify-content: flex-start;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
     min-height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    background: transparent;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
   }
 }
 
 @media (max-width: 480px) {
   .layout-container {
-    padding: 8px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
   }
 }
 
@@ -70,21 +85,23 @@
 /* Mobile responsive card */
 @media (max-width: 768px) {
   .layout-card {
-    border-radius: 20px;
-    padding: 30px 20px;
+    border-radius: 0;
+    padding: 20px;
     max-width: 100%;
-    margin: 10px 0;
-    box-shadow: 
-      0 10px 30px rgba(0, 0, 0, 0.15),
-      0 0 0 1px rgba(255, 255, 255, 0.2);
+    margin: 0;
+    width: 100%;
+    box-shadow: none;
+    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
   .layout-card {
-    border-radius: 16px;
-    padding: 24px 16px;
-    margin: 8px 0;
+    border-radius: 0;
+    padding: 16px;
+    margin: 0;
+    width: 100%;
+    text-align: center;
   }
 }
 
@@ -114,6 +131,17 @@
 .layout-header {
   margin-bottom: 35px;
   animation: fadeInUp 0.8s ease-out;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .layout-header {
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 @keyframes fadeInUp {
@@ -143,6 +171,19 @@
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: logoFloat 3s ease-in-out infinite;
+}
+
+/* Mobile logo margin */
+@media (max-width: 768px) {
+  .layout-logo {
+    margin: 60px auto 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-logo {
+    margin: 50px auto 40px;
+  }
 }
 
 @keyframes logoFloat {
@@ -312,7 +353,7 @@
   }
   
   .layout-card {
-    padding: 35px 20px;
+    padding: 20px 0px;
     border-radius: 20px;
   }
   

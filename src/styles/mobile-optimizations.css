@@ -32,6 +32,8 @@ select {
   /* Extra small devices (phones) */
   .container-mukando {
     padding: 0 12px;
+    margin: 0 auto;
+    text-align: center;
   }
   
   .section-padding {
@@ -72,6 +74,8 @@ select {
   /* Small devices (tablets) */
   .container-mukando {
     padding: 0 16px;
+    margin: 0 auto;
+    text-align: center;
   }
   
   .section-padding {
@@ -331,6 +335,32 @@ select:focus {
 .layout-container {
   will-change: transform;
   transform: translateZ(0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Mobile centering fixes */
+@media (max-width: 768px) {
+  .layout-container {
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    text-align: center;
+  }
+  
+  .layout-card {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .card {
