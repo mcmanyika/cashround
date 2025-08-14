@@ -49,53 +49,23 @@ const Footer = () => {
     <footer className="footer" style={{
       backgroundColor: '#f8f9fa',
       borderTop: '1px solid #e9ecef',
-      padding: '20px 0',
       marginTop: '20px',
       textAlign: 'center',
       position: 'relative',
       bottom: 0,
-      width: '100%',
-      // Mobile responsive padding
-      '@media (max-width: 768px)': {
-        padding: '16px 0'
-      },
-      '@media (max-width: 480px)': {
-        padding: '12px 0'
-      }
+      width: '100%'
     }}>
-              <div className="container" style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 20px',
-          // Mobile responsive padding
-          '@media (max-width: 768px)': {
-            padding: '0 16px'
-          },
-          '@media (max-width: 480px)': {
-            padding: '0 12px'
-          }
-        }}>
+      <div className="container" style={{
+        maxWidth: '1200px',
+        margin: '0 auto'
+      }}>
         <div className="footer-content" style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: '15px'
         }}>
-          <div className="footer-links" style={{
-            display: 'flex',
-            gap: '20px',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            // Mobile responsive gap
-            '@media (max-width: 768px)': {
-              gap: '16px'
-            },
-            '@media (max-width: 480px)': {
-              gap: '12px',
-              flexDirection: 'column',
-              alignItems: 'center'
-            }
-          }}>
+          <div className="footer-links">
             <Link href="/whitepaper" style={{
               color: '#00b894',
               textDecoration: 'none',

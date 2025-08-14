@@ -401,6 +401,56 @@ select:focus {
   height: 32px;
 }
 
+/* Footer mobile optimizations */
+.footer {
+  padding: 20px 0;
+}
+
+.footer .container {
+  padding: 0 20px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 16px 0;
+  }
+  
+  .footer .container {
+    padding: 0 16px;
+  }
+  
+  .footer-links {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 12px 0;
+  }
+  
+  .footer .container {
+    padding: 0 2px;
+  }
+  
+  .footer-links {
+    gap: 12px;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .footer-content {
+    gap: 12px;
+  }
+}
+
 /* Mobile form optimizations */
 .mobile-form {
   display: flex;
