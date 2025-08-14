@@ -122,18 +122,6 @@ const Footer = () => {
                 fontSize: '12px',
                 fontWeight: 'bold'
               }}>CR</span>
-              <span style={{
-                backgroundColor: '#00b894',
-                color: 'white',
-                borderRadius: '50%',
-                width: '16px',
-                height: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '10px',
-                fontWeight: 'bold'
-              }}>$</span>
             </div>
             <span style={{
               fontSize: '14px',
@@ -147,7 +135,7 @@ const Footer = () => {
             color: '#636e72',
             marginTop: '5px'
           }}>
-            © 2025 Cash Round. Decentralized MUKANDO Platform.
+            © {new Date().getFullYear()} Cash Round. Decentralized MUKANDO Platform.
           </div>
         </div>
       </div>
