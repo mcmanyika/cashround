@@ -33,7 +33,6 @@
     min-height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    background: #f8f9fa;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -45,7 +44,7 @@
     padding: 0;
     align-items: center;
     justify-content: center;
-    background: #f8f9fa;
+    background: gray;
   }
 }
 

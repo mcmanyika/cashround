@@ -356,7 +356,7 @@ select:focus {
     align-items: center;
     justify-content: center;
     padding: 0;
-    background: #f8f9fa;
+    /* background: #f8f9fa; */
     text-align: center;
   }
   
@@ -478,22 +478,7 @@ select:focus {
   }
 }
 
-/* Layout connect spacing */
-.layout-connect {
-  padding-bottom: 150px;
-}
 
-@media (max-width: 768px) {
-  .layout-connect {
-    padding-bottom: 200px;
-  }
-}
-
-@media (max-width: 480px) {
-  .layout-connect {
-    padding-bottom: 250px;
-  }
-}
 
 /* Mobile form optimizations */
 .mobile-form {

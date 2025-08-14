@@ -263,7 +263,7 @@ export const LayoutConnect = ({ client, className = '' }) => {
         flexDirection: 'column',
         alignItems: 'center',
         gap: '20px',
-        padding: '20px 20px 150px 20px'
+        padding: '20px 20px'
       }}
     >
       {!isConnected && (
