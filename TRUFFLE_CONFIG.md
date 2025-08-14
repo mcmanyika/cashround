@@ -298,4 +298,4 @@ truffle migrate --network polygon
    - Add testnet networks to MetaMask
    - Import test tokens
 
-This setup gives you a complete testnet deployment pipeline for your Cash Round dApp! 🚀
+This setup gives you a complete testnet deployment pipeline for your Mukando dApp! 🚀

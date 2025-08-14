@@ -1,6 +1,6 @@
-# Cash Round - Next.js App
+# Mukando - Next.js App
 
-This is a Next.js version of the Cash Round dApp, converted from a React app.
+This is a Next.js version of the Mukando dApp, converted from a React app.
 
 ## Features
 
@@ -54,4 +54,4 @@ This app was converted from a React app to Next.js with the following changes:
 
 ## Smart Contracts
 
-The app integrates with Ethereum smart contracts for the referral system. Make sure you have the correct network configuration and contract addresses set up. 
+The app integrates with Ethereum smart contracts for the referral system. Make sure you have the correct network configuration and contract addresses set up.

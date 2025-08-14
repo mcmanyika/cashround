@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
-import { isTreeOwner, hasTwoLevelDownline } from '../../rosca/services/rosca';
+import { isTreeOwner, hasTwoLevelDownline, isTreeMember } from '../../rosca/services/rosca';
 
 const Footer = () => {
   const activeWallet = useActiveWallet();
   const activeAccount = useActiveAccount();
   const isConnected = activeAccount?.address && activeWallet;
   const [canCreatePools, setCanCreatePools] = useState(false);
+  const [isMember, setIsMember] = useState(false);
 
   // Check if user can create pools (tree owner or has 2+ level downlines)
   useEffect(() => {
     const checkCreatePermission = async () => {
       if (!isConnected || !activeAccount?.address) {
         setCanCreatePools(false);
+        setIsMember(false);
         return;
       }
 
@@ -29,10 +31,15 @@ const Footer = () => {
           const canCreate = isOwner || hasDownlines;
           
           setCanCreatePools(canCreate);
+          
+          // Check if user is a tree member
+          const member = await isTreeMember(web3, activeAccount.address);
+          setIsMember(member);
         }
       } catch (error) {
         console.error('Error checking create pool permission:', error);
         setCanCreatePools(false);
+        setIsMember(false);
       }
     };
 
@@ -86,7 +93,7 @@ const Footer = () => {
             }}>
               📄 White Paper
             </Link>
-            {isConnected && (
+            {isConnected && isMember && (
               <Link href="/pools" style={{
                 color: '#636e72',
                 textDecoration: 'none',
@@ -159,7 +166,7 @@ const Footer = () => {
               fontSize: '14px',
               fontWeight: '600',
               color: '#2d3436'
-            }}>Cash Round</span>
+            }}>Mukando</span>
           </div>
           
           <div className="footer-copyright" style={{
@@ -167,7 +174,7 @@ const Footer = () => {
             color: '#636e72',
             marginTop: '5px'
           }}>
-            © {new Date().getFullYear()} Cash Round. Decentralized MUKANDO Platform.
+            © {new Date().getFullYear()} Mukando. Decentralized MUKANDO Platform.
           </div>
         </div>
       </div>

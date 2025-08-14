@@ -691,7 +691,7 @@ const SendToReferrers = ({ web3, account }) => {
                     marginBottom: '12px'
                   }}
                 >
-                  Join Cash Round
+                  Join Mukando
                 </button>
                 <p style={{
                   color: '#636e72',

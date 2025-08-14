@@ -88,7 +88,7 @@ export const LayoutLoading = ({ className = '' }) => (
   </div>
 );
 
-export const LayoutSignout = ({ className = '' }) => {
+export const LayoutSignout = ({ className = '', isMember = false }) => {
   const activeWallet = useActiveWallet();
   const activeAccount = useActiveAccount();
   const router = useRouter();
@@ -151,20 +151,22 @@ export const LayoutSignout = ({ className = '' }) => {
           Pools
         </Link>
       )}
-      <Link
-        href="/income"
-        style={{
-          color: '#00b894',
-          fontSize: '14px',
-          fontWeight: 700,
-          textDecoration: 'none',
-          padding: '8px 10px',
-          background: 'rgba(0, 184, 148, 0.08)',
-          borderRadius: 8,
-        }}
-      >
-        Earnings
-      </Link>
+      {isMember && (
+        <Link
+          href="/income"
+          style={{
+            color: '#00b894',
+            fontSize: '14px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            padding: '8px 10px',
+            background: 'rgba(0, 184, 148, 0.08)',
+            borderRadius: 8,
+          }}
+        >
+          Earnings
+        </Link>
+      )}
       <p
         onClick={handleSignout}
         className={`layout-signout ${className}`}
@@ -226,7 +228,7 @@ export const LayoutWithHeader = ({ children, showSignout = false, client, isMemb
   return (
     <Layout showFooter={showFooter}>
       <LayoutCard>
-        {showSignout && isConnected && <LayoutSignout />}
+        {showSignout && isConnected && <LayoutSignout isMember={finalIsMember} />}
         <LayoutHeader>
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <LayoutLogo>
@@ -234,7 +236,7 @@ export const LayoutWithHeader = ({ children, showSignout = false, client, isMemb
               <LayoutLogoBadge>$</LayoutLogoBadge>
             </LayoutLogo>
           </Link>
-          <LayoutTitle>Cash Round</LayoutTitle>
+          <LayoutTitle>Mukando</LayoutTitle>
           <LayoutSubtitle>
             {finalIsMember ? "Welcome Back! Refer And Earn Rewards." : "Join Our Network And Start Earning Rewards."}
           </LayoutSubtitle>

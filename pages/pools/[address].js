@@ -535,14 +535,6 @@ export default function PoolDetail() {
             <div style={rowStyle}><div style={keyStyle}>Pool Size</div><div style={valStyle}>{info.size}</div></div>
             <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)} ETH</div></div>
             <div style={rowStyle}><div style={keyStyle}>Start date</div><div style={valStyle}>{formatDate(info.startTime)}</div></div>
-            <div style={rowStyle}><div style={keyStyle}>Time until start</div><div style={valStyle}>
-              <span style={{ 
-                color: countdown === 'Pool has started!' ? '#00b894' : '#e17055',
-                fontWeight: countdown === 'Pool has started!' ? 600 : 500
-              }}>
-                {countdown || 'Calculating...'}
-              </span>
-            </div></div>
             <div style={rowStyle}><div style={keyStyle}>Current round</div><div style={valStyle}>{Number(info.currentRound)}</div></div>
             <div style={rowStyle}>
               <div style={keyStyle}>Current recipient</div>
@@ -662,6 +654,10 @@ export default function PoolDetail() {
                 {hasContributed ? (
                   <div style={{ padding: '10px 14px', background: '#e9ecef', borderRadius: 10, color: '#6c757d', fontWeight: 700, textAlign: 'center' }}>
                     ✓ Already Contributed to Round {Number(info.currentRound)}
+                  </div>
+                ) : countdown !== 'Pool has started!' ? (
+                  <div style={{ padding: '10px 14px', background: '#fff3cd', borderRadius: 10, color: '#856404', fontWeight: 700, textAlign: 'center' }}>
+                    ⏳ Pool starts in: {countdown}
                   </div>
                 ) : (
                   <button disabled={isContributing || isTriggeringPayout} onClick={approveAndContribute} style={{

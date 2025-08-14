@@ -666,7 +666,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
             }
           }}
         >
-          {loading ? 'Processing...' : 'Join Cash Round'}
+          {loading ? 'Processing...' : 'Join Mukando'}
         </button>
       </form>
       {showBecomeMember && (

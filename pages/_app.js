@@ -14,7 +14,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>Cash Round</title>
+        <title>Mukando</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="Connect with your referrer and start earning rewards" />
       </Head>
