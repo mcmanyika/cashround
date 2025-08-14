@@ -72,12 +72,12 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
         const id = await web3.eth.net.getId();
         setNetworkId(id);
         const networkData = TreeContract.networks[id];
-        // Known addresses per network
+        // Contract addresses from environment variables
         const addressBook = {
-          80002: '0xFD2FaC399ddc9966070514ED87269aee9A93a824', // Polygon Amoy (Amon testnet)
-          137: '0xa1268396c94543f42238accfaee9776fce12a52a',   // Polygon Mainnet
-          5777: TreeContract.networks?.[5777]?.address,
-          1337: TreeContract.networks?.[1337]?.address
+          80002: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_AMOY || TreeContract.networks?.[80002]?.address, // Polygon Amoy
+          137: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_POLYGON || TreeContract.networks?.[137]?.address,   // Polygon Mainnet
+          5777: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_LOCAL || TreeContract.networks?.[5777]?.address,  // Local development
+          1337: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_LOCAL || TreeContract.networks?.[1337]?.address  // Local development
         };
         const contractAddress = addressBook[id] || (networkData && networkData.address);
         if (contractAddress) {

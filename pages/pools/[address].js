@@ -530,11 +530,9 @@ export default function PoolDetail() {
         {loading || !info ? (
           <p>Loading...</p>
         ) : (
-          <>
-            <div style={rowStyle}><div style={keyStyle}>Currency</div><div style={valStyle}>{token === '0x0000000000000000000000000000000000000000' ? 'ETH (Native)' : `Token: ${shorten(token)}`}</div></div>
-            <div style={rowStyle}><div style={keyStyle}>Pool Size</div><div style={valStyle}>{info.size}</div></div>
+          <>  
             <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)} ETH</div></div>
-            <div style={rowStyle}><div style={keyStyle}>Start date</div><div style={valStyle}>{formatDate(info.startTime)}</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Pool Size</div><div style={valStyle}>{info.size}</div></div>
             <div style={rowStyle}><div style={keyStyle}>Current round</div><div style={valStyle}>{Number(info.currentRound)}</div></div>
             <div style={rowStyle}>
               <div style={keyStyle}>Current recipient</div>
@@ -689,7 +687,7 @@ export default function PoolDetail() {
             ) : (
               <div style={{ margin: '16px 0', padding: '12px', background: '#f8f9fa', borderRadius: 8, border: '1px solid #e9ecef' }}>
                 <p style={{ margin: 0, color: '#6c757d', fontSize: 14, textAlign: 'center' }}>
-                  You are not a member of this pool. Only pool members can contribute and trigger payouts.
+                  You are not a member of this pool. Only pool members can contribute.
                 </p>
               </div>
             )}

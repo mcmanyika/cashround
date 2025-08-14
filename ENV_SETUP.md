@@ -6,8 +6,15 @@ This project uses environment variables for configuration. To set up your enviro
 2. Add the following variables:
 
 ```env
-# Contract Configuration
-NEXT_PUBLIC_POLYGON_MAINNET_CONTRACT_ADDRESS="0xa1268396c94543f42238accfaee9776fce12a52a"
+# Tree Contract Addresses
+NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_AMOY="0xFD2FaC399ddc9966070514ED87269aee9A93a824"
+NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_POLYGON="0xa1268396c94543f42238accfaee9776fce12a52a"
+NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_LOCAL=""
+
+# Pool Factory Address
+NEXT_PUBLIC_POOL_FACTORY_ADDRESS=""
+
+# Network Configuration
 NEXT_PUBLIC_NETWORK_ID="137"
 
 # Price API Configuration (Optional)
@@ -16,8 +23,22 @@ NEXT_PUBLIC_COINMARKETCAP_API_KEY="your_coinmarketcap_api_key_here"
 
 ## Environment Variables
 
-- `NEXT_PUBLIC_POLYGON_MAINNET_CONTRACT_ADDRESS`: The contract address on Polygon mainnet
+### Tree Contract Addresses
+
+- `NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_AMOY`: The Tree contract address on Polygon Amoy testnet (80002)
+- `NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_POLYGON`: The Tree contract address on Polygon mainnet (137)
+- `NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_LOCAL`: The Tree contract address for local development (5777/1337)
+
+### Pool Factory Address
+
+- `NEXT_PUBLIC_POOL_FACTORY_ADDRESS`: The Pool Factory contract address
+
+### Network Configuration
+
 - `NEXT_PUBLIC_NETWORK_ID`: The default network ID (137 for Polygon mainnet)
+
+### Price API Configuration
+
 - `NEXT_PUBLIC_COINMARKETCAP_API_KEY`: (Optional) CoinMarketCap API key for enhanced price data
 
 ## Development

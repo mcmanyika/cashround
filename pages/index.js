@@ -39,8 +39,14 @@ export default function Home() {
       const currentNetworkName = networkNames[networkId] || `Network ${networkId}`;
       console.log(`Connected to: ${currentNetworkName}`);
       
-      const addressOverride = '0xFD2FaC399ddc9966070514ED87269aee9A93a824';
-      const contractAddress = (networkData && networkData.address) ? networkData.address : addressOverride;
+      // Get contract address from environment variables based on network
+      const addressBook = {
+        80002: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_AMOY,
+        137: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_POLYGON,
+        5777: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_LOCAL,
+        1337: process.env.NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_LOCAL
+      };
+      const contractAddress = addressBook[networkId] || (networkData && networkData.address);
       if (contractAddress) {
         const contract = new web3Instance.eth.Contract(
           TreeContract.abi,

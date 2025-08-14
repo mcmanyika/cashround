@@ -29,6 +29,7 @@ export default function PoolsIndex() {
   const [checkingMember, setCheckingMember] = useState(true);
   const [showMyPoolsOnly, setShowMyPoolsOnly] = useState(false);
   const [myPools, setMyPools] = useState([]);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   // Sync thirdweb connection state with local state
   useEffect(() => {
@@ -42,6 +43,21 @@ export default function PoolsIndex() {
         const Web3 = require('web3');
         const web3Instance = new Web3(window.ethereum);
         setWeb3(web3Instance);
+        
+        // Immediately check membership status to prevent content flash
+        (async () => {
+          try {
+            const member = await isTreeMember(web3Instance, activeAccount.address);
+            if (!member) {
+              router.replace('/referral');
+              return;
+            }
+          } catch (error) {
+            console.error('Error checking membership:', error);
+            router.replace('/referral');
+            return;
+          }
+        })();
       }
       setLoading(false);
     } else {
@@ -51,19 +67,19 @@ export default function PoolsIndex() {
     }
   }, [activeAccount, activeWallet, router]);
 
-  // Immediate member check and redirect
+  // Member check and data loading (only if user is already confirmed as member)
   useEffect(() => {
     if (!isConnected || !web3 || !account) return;
 
     (async () => {
       try {
-        // Check if user is a tree member immediately
+        // Double-check membership status
         const member = await isTreeMember(web3, account);
         setIsMember(member);
         
-        // If user is not a member, redirect immediately without loading any data
+        // If user is not a member, redirect immediately
         if (!member) {
-          router.replace('/referral'); // Use replace to prevent back button
+          router.replace('/referral');
           return;
         }
 
@@ -242,6 +258,11 @@ export default function PoolsIndex() {
   }
 
   if (!isConnected) {
+    return <LayoutLoading />;
+  }
+
+  // If should redirect, show loading to prevent content flash
+  if (shouldRedirect) {
     return <LayoutLoading />;
   }
 

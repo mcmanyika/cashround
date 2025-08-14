@@ -188,7 +188,7 @@ export default function CreatePool() {
   }
 
   return (
-    <LayoutWithHeader showSignout={true}>
+    <LayoutWithHeader showSignout={true} isMember={true}>
       <ToastContainer position="top-center" />
       <div style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
