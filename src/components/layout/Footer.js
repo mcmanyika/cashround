@@ -171,7 +171,7 @@ const Footer = () => {
             marginTop: '5px'
           }}>
             © {new Date().getFullYear()} Mukando. 
-            Decentralized <br className="mobile-only" />CASH ROUND Platform.
+            Decentralized CASH ROUND Platform.
           </div>
         </div>
       </div>
