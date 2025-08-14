@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom components for Mukando */
+@layer components {
+  /* Button variants */
+  .btn-primary {
+    @apply px-4 py-2 bg-mukando-500 text-white rounded-lg font-semibold hover:bg-mukando-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-mukando-500 focus:ring-opacity-50;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50;
+  }
+  
+  .btn-outline {
+    @apply px-4 py-2 border border-mukando-500 text-mukando-500 rounded-lg font-semibold hover:bg-mukando-500 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-mukando-500 focus:ring-opacity-50;
+  }
+  
+  /* Card variants */
+  .card {
+    @apply bg-white rounded-xl shadow-lg border border-gray-100 p-6;
+  }
+  
+  .card-hover {
+    @apply card hover:shadow-xl transition-shadow duration-200;
+  }
+  
+  /* Input variants */
+  .input-primary {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mukando-500 focus:border-mukando-500 transition-colors duration-200;
+  }
+  
+  .input-error {
+    @apply w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200;
+  }
+  
+  /* Layout utilities */
+  .container-mukando {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .section-padding {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+  
+  /* Text utilities */
+  .text-gradient {
+    @apply bg-gradient-to-r from-mukando-500 to-mukando-700 bg-clip-text text-transparent;
+  }
+  
+  .heading-primary {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900;
+  }
+  
+  .heading-secondary {
+    @apply text-2xl sm:text-3xl font-semibold text-gray-800;
+  }
+  
+  /* Status indicators */
+  .status-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+  }
+  
+  .status-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800;
+  }
+  
+  .status-error {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+  }
+  
+  /* Loading states */
+  .loading-spinner {
+    @apply animate-spin rounded-full h-6 w-6 border-b-2 border-mukando-500;
+  }
+  
+  /* Responsive grid */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  
+  /* Mobile-first navigation */
+  .nav-mobile {
+    @apply fixed inset-0 z-50 bg-white lg:hidden;
+  }
+  
+  .nav-desktop {
+    @apply hidden lg:flex items-center space-x-8;
+  }
+}
+
+/* Custom utilities for Mukando */
+@layer utilities {
+  .bg-gradient-mukando {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #00b894 50%, #00a085 75%, #00cec9 100%);
+  }
+  
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .backdrop-blur-custom {
+    backdrop-filter: blur(30px);
+  }
+}
