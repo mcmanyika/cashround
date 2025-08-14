@@ -1,11 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
+import { isTreeOwner, hasTwoLevelDownline } from '../../rosca/services/rosca';
 
 const Footer = () => {
   const activeWallet = useActiveWallet();
   const activeAccount = useActiveAccount();
   const isConnected = activeAccount?.address && activeWallet;
+  const [canCreatePools, setCanCreatePools] = useState(false);
+
+  // Check if user can create pools (tree owner or has 2+ level downlines)
+  useEffect(() => {
+    const checkCreatePermission = async () => {
+      if (!isConnected || !activeAccount?.address) {
+        setCanCreatePools(false);
+        return;
+      }
+
+      try {
+        // Create web3 instance
+        if (window.ethereum) {
+          const Web3 = require('web3');
+          const web3 = new Web3(window.ethereum);
+          
+          // Check if user is tree owner or has 2+ level downlines
+          const isOwner = await isTreeOwner(web3, activeAccount.address);
+          const hasDownlines = await hasTwoLevelDownline(web3, activeAccount.address);
+          const canCreate = isOwner || hasDownlines;
+          
+          setCanCreatePools(canCreate);
+        }
+      } catch (error) {
+        console.error('Error checking create pool permission:', error);
+        setCanCreatePools(false);
+      }
+    };
+
+    checkCreatePermission();
+  }, [isConnected, activeAccount?.address]);
   return (
     <footer className="footer" style={{
       backgroundColor: '#f8f9fa',
@@ -55,48 +87,48 @@ const Footer = () => {
               📄 White Paper
             </Link>
             {isConnected && (
-              <>
-                <Link href="/pools" style={{
-                  color: '#636e72',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid transparent'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
-                  e.target.style.borderColor = '#636e72';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.borderColor = 'transparent';
-                }}>
-                  💰 Active Pools
-                </Link>
-                <Link href="/pools/create" style={{
-                  color: '#636e72',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.2s ease',
-                  border: '1px solid transparent'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
-                  e.target.style.borderColor = '#636e72';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.borderColor = 'transparent';
-                }}>
-                  ➕ Create Pool
-                </Link>
-              </>
+              <Link href="/pools" style={{
+                color: '#636e72',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '500',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                transition: 'all 0.2s ease',
+                border: '1px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
+                e.target.style.borderColor = '#636e72';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+                e.target.style.borderColor = 'transparent';
+              }}>
+                💰 Active Pools
+              </Link>
+            )}
+            {isConnected && canCreatePools && (
+              <Link href="/pools/create" style={{
+                color: '#636e72',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '500',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                transition: 'all 0.2s ease',
+                border: '1px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = 'rgba(99, 110, 114, 0.1)';
+                e.target.style.borderColor = '#636e72';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+                e.target.style.borderColor = 'transparent';
+              }}>
+                ➕ Create Pool
+              </Link>
             )}
           </div>
           

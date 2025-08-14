@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { createAvatar } from '@dicebear/core';
 import { identicon } from '@dicebear/collection';
 
@@ -35,7 +36,7 @@ const Identicon = ({ string, size = 32, ...props }) => {
   }
 
   return (
-    <img
+    <Image
       src={svg}
       alt={`Identicon for ${string}`}
       width={size}
@@ -44,6 +45,7 @@ const Identicon = ({ string, size = 32, ...props }) => {
         borderRadius: '50%',
         display: 'block',
       }}
+      unoptimized={true}
       {...props}
     />
   );

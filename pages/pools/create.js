@@ -18,7 +18,8 @@ export default function CreatePool() {
   const [token, setToken] = useState('');
   const [size, setSize] = useState(5);
   const [contribution, setContribution] = useState('1'); // Default to 1 ETH
-  const [roundDuration, setRoundDuration] = useState(30 * 24 * 60 * 60);
+  const [roundDuration, setRoundDuration] = useState(30 * 24 * 60 * 60); // Default to 30 days
+  const [rotationFrequency, setRotationFrequency] = useState('monthly'); // Default to monthly
   const [startTime, setStartTime] = useState('');
   const [mounted, setMounted] = useState(false);
   const [orderCsv, setOrderCsv] = useState('');
@@ -161,6 +162,26 @@ export default function CreatePool() {
     e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
   };
 
+  const handleRotationFrequencyChange = (frequency) => {
+    setRotationFrequency(frequency);
+    // Convert frequency to seconds
+    let durationInSeconds;
+    switch (frequency) {
+      case 'daily':
+        durationInSeconds = 24 * 60 * 60; // 1 day
+        break;
+      case 'weekly':
+        durationInSeconds = 7 * 24 * 60 * 60; // 7 days
+        break;
+      case 'monthly':
+        durationInSeconds = 30 * 24 * 60 * 60; // 30 days
+        break;
+      default:
+        durationInSeconds = 30 * 24 * 60 * 60; // Default to monthly
+    }
+    setRoundDuration(durationInSeconds);
+  };
+
   // Show loading while checking member status
   if (checkingMember) {
     return <LayoutLoading />;
@@ -225,16 +246,66 @@ export default function CreatePool() {
           </div>
 
           <div>
-          <input
-                type="hidden"
-                min={60}
-                style={inputStyle}
-                placeholder="e.g., 2592000 (30 days)"
-                value={roundDuration}
-                onChange={(e) => setRoundDuration(e.target.value)}
-                onFocus={onFocus}
-                onBlur={onBlur}
-              />
+            <div style={labelStyle}>Rotation Frequency</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => handleRotationFrequencyChange('daily')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: rotationFrequency === 'daily' ? '#00b894' : '#f8f9fa',
+                  color: rotationFrequency === 'daily' ? 'white' : '#636e72',
+                  border: `1px solid ${rotationFrequency === 'daily' ? '#00b894' : '#e9ecef'}`,
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Daily
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRotationFrequencyChange('weekly')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: rotationFrequency === 'weekly' ? '#00b894' : '#f8f9fa',
+                  color: rotationFrequency === 'weekly' ? 'white' : '#636e72',
+                  border: `1px solid ${rotationFrequency === 'weekly' ? '#00b894' : '#e9ecef'}`,
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Weekly
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRotationFrequencyChange('monthly')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: rotationFrequency === 'monthly' ? '#00b894' : '#f8f9fa',
+                  color: rotationFrequency === 'monthly' ? 'white' : '#636e72',
+                  border: `1px solid ${rotationFrequency === 'monthly' ? '#00b894' : '#e9ecef'}`,
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Monthly
+              </button>
+            </div>
+            <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }}>
+              Members contribute every {rotationFrequency === 'daily' ? 'day' : rotationFrequency === 'weekly' ? 'week' : 'month'}
+            </div>
           </div>
 
           <div>

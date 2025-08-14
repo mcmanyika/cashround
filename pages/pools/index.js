@@ -5,7 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { getWeb3FromThirdwebWallet } from '../../src/rosca/services/rosca';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
-import { getWeb3, getFactory, getMukandoPool, isTreeMember } from '../../src/rosca/services/rosca';
+import { getWeb3, getFactory, getMukandoPool, isTreeMember, isTreeOwner, hasTwoLevelDownline } from '../../src/rosca/services/rosca';
 
 
 // NOTE: set this via .env in real usage
@@ -27,6 +27,8 @@ export default function PoolsIndex() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPools, setFilteredPools] = useState([]);
   const [checkingMember, setCheckingMember] = useState(true);
+  const [showMyPoolsOnly, setShowMyPoolsOnly] = useState(false);
+  const [myPools, setMyPools] = useState([]);
 
   // Sync thirdweb connection state with local state
   useEffect(() => {
@@ -65,6 +67,12 @@ export default function PoolsIndex() {
           return;
         }
 
+        // Check if user can create pools (tree owner or has 2+ level downlines)
+        const isOwner = await isTreeOwner(web3, account);
+        const hasDownlines = await hasTwoLevelDownline(web3, account);
+        const canCreatePools = isOwner || hasDownlines;
+        setCanCreate(canCreatePools);
+
         setCheckingMember(false); // Member check complete
 
         if (!FACTORY_ADDRESS) {
@@ -93,7 +101,17 @@ export default function PoolsIndex() {
                 try {
                   const size = await pool.methods.size().call();
                   const contribution = await pool.methods.contribution().call();
-                  return { address: addr, size, contribution };
+                  
+                  // Check if user is a member of this pool
+                  const payoutOrder = await pool.methods.getPayoutOrder().call();
+                  const isParticipating = payoutOrder.some(addr => addr.toLowerCase() === account.toLowerCase());
+                  
+                  return { 
+                    address: addr, 
+                    size, 
+                    contribution, 
+                    isParticipating 
+                  };
                 } catch (error) {
                   // Fallback to poolInfo method
                   const pi = await pool.methods.poolInfo().call();
@@ -115,14 +133,32 @@ export default function PoolsIndex() {
                     contribution = pi[1];
                   }
                   
-                  return { address: addr, size, contribution };
+                  // Check if user is a member of this pool
+                  const payoutOrder = await pool.methods.getPayoutOrder().call();
+                  const isParticipating = payoutOrder.some(addr => addr.toLowerCase() === account.toLowerCase());
+                  
+                  return { 
+                    address: addr, 
+                    size, 
+                    contribution, 
+                    isParticipating 
+                  };
                 }
               } catch {
-                return { address: addr, size: '-', contribution: '-' };
+                return { 
+                  address: addr, 
+                  size: '-', 
+                  contribution: '-', 
+                  isParticipating: false 
+                };
               }
             })
           );
           setPoolsData(infos);
+          
+          // Set user's pools
+          const userPools = infos.filter(pool => pool.isParticipating);
+          setMyPools(userPools);
         } catch {}
       } catch (e) {
         toast.error(e.message || 'Error loading pools');
@@ -138,24 +174,30 @@ export default function PoolsIndex() {
     }
   }, [isConnected]);
 
-  // Filter pools based on search term
+  // Filter pools based on search term and participation
   useEffect(() => {
     if (!poolsData.length) {
       setFilteredPools([]);
       return;
     }
 
-    if (!searchTerm.trim()) {
-      setFilteredPools(poolsData);
-      return;
+    let filtered = poolsData;
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(pool => 
+        pool.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pool.address.toLowerCase().startsWith(searchTerm.toLowerCase())
+      );
     }
 
-    const filtered = poolsData.filter(pool => 
-      pool.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pool.address.toLowerCase().startsWith(searchTerm.toLowerCase())
-    );
+    // Filter by participation
+    if (showMyPoolsOnly) {
+      filtered = filtered.filter(pool => pool.isParticipating);
+    }
+
     setFilteredPools(filtered);
-  }, [poolsData, searchTerm]);
+  }, [poolsData, searchTerm, showMyPoolsOnly]);
 
   const cardStyle = {
     maxWidth: 640,
@@ -212,26 +254,69 @@ export default function PoolsIndex() {
     <LayoutWithHeader showSignout={true} isMember={isMember}>
       <ToastContainer position="bottom-center" />
       <div style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <h2 style={{ margin: 0, color: '#2d3436' }}>Available Pools</h2>
-          {canCreate && (
-            <Link href="/pools/create" style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 8, 
-              fontWeight: 700, 
-              color: '#00b894', 
-              whiteSpace: 'nowrap',
-              textDecoration: 'none',
-              padding: '8px 12px',
-              borderRadius: 8,
-              background: 'rgba(0, 184, 148, 0.1)',
-              transition: 'all 0.2s ease'
-            }}>
-              <span style={{ fontSize: '18px' }}>➕</span>
-              Create Pool
-            </Link>
-          )}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={() => setShowMyPoolsOnly(!showMyPoolsOnly)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 16px',
+                background: showMyPoolsOnly ? '#00b894' : '#f8f9fa',
+                color: showMyPoolsOnly ? 'white' : '#636e72',
+                border: `1px solid ${showMyPoolsOnly ? '#00b894' : '#e9ecef'}`,
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                position: 'relative'
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>👥</span>
+              {showMyPoolsOnly ? 'Show All Pools' : 'My Pools Only'}
+              {showMyPoolsOnly && myPools.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  background: '#00b894',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: 20,
+                  height: 20,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                  {myPools.length > 99 ? '99+' : myPools.length}
+                </div>
+              )}
+            </button>
+            {canCreate && (
+              <Link href="/pools/create" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 8, 
+                fontWeight: 700, 
+                color: '#00b894', 
+                whiteSpace: 'nowrap',
+                textDecoration: 'none',
+                padding: '8px 12px',
+                borderRadius: 8,
+                background: 'rgba(0, 184, 148, 0.1)',
+                transition: 'all 0.2s ease'
+              }}>
+                <span style={{ fontSize: '18px' }}>➕</span>
+                Create Pool
+              </Link>
+            )}
+          </div>
         </div>
         
         {/* Search Bar */}
