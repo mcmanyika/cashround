@@ -53,7 +53,9 @@ const Footer = () => {
       textAlign: 'center',
       position: 'relative',
       bottom: 0,
-      width: '100%'
+      width: '100%',
+      minHeight: '100px',
+      paddingBottom: '50px'
     }}>
       <div className="container" style={{
         maxWidth: '1200px',
