@@ -51,11 +51,12 @@ const Footer = () => {
       borderTop: '1px solid #e9ecef',
       marginTop: '20px',
       textAlign: 'center',
-      position: 'relative',
+      position: 'sticky',
       bottom: 0,
       width: '100%',
       minHeight: '100px',
-      paddingBottom: '50px'
+      paddingBottom: '50px',
+      zIndex: 1000
     }}>
       <div className="container" style={{
         maxWidth: '1200px',

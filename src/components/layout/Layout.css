@@ -29,11 +29,11 @@
   .layout-container {
     padding: 0;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     min-height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    background: transparent;
+    background: #f8f9fa;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -44,8 +44,8 @@
   .layout-container {
     padding: 0;
     align-items: center;
-    justify-content: flex-end;
-    background: transparent;
+    justify-content: center;
+    background: #f8f9fa;
   }
 }
 
@@ -90,7 +90,7 @@
 @media (max-width: 768px) {
   .layout-card {
     border-radius: 0;
-    padding: 20px 0;
+    padding: 10px 0;
     max-width: 100vw;
     margin: 0;
     width: 100vw;
@@ -104,13 +104,26 @@
 @media (max-width: 480px) {
   .layout-card {
     border-radius: 0;
-    padding: 16px 0;
+    padding: 8px 0;
     margin: 0;
     width: 100vw;
     max-width: 100vw;
     min-height: 100vh;
     height: auto;
     text-align: center;
+  }
+  
+  /* Disable hover effects on mobile */
+  .layout-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .layout-logo:hover {
+    transform: none;
+    box-shadow: 
+      0 12px 30px rgba(0, 184, 148, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -129,12 +142,20 @@
   pointer-events: none;
 }
 
+
 .layout-card:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 
     0 35px 70px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.layout-logo:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 20px 40px rgba(0, 184, 148, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .layout-header {
@@ -185,13 +206,13 @@
 /* Mobile logo margin */
 @media (max-width: 768px) {
   .layout-logo {
-    margin: 60px auto 40px;
+    margin: 30px auto 40px;
   }
 }
 
 @media (max-width: 480px) {
   .layout-logo {
-    margin: 50px auto 40px;
+    margin: 20px auto 40px;
   }
 }
 
@@ -216,12 +237,7 @@
   100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
 
-.layout-logo:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 
-    0 20px 40px rgba(0, 184, 148, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.3);
-}
+
 
 .layout-logo-text {
   font-size: 36px;
