@@ -31,7 +31,7 @@ const Layout = ({
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <div style={{ flex: 1 }}>
+      <div>
         {children}
       </div>
     </div>
