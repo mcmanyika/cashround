@@ -359,12 +359,6 @@ export default function Whitepaper() {
                 <Link href="/" className="text-blue-600 hover:text-blue-800 block mb-2">
                   → Access Mukando Platform
                 </Link>
-                <Link href="/pools" className="text-blue-600 hover:text-blue-800 block mb-2">
-                  → View Active Pools
-                </Link>
-                <Link href="/pools/create" className="text-blue-600 hover:text-blue-800 block">
-                  → Create New Pool
-                </Link>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Technical Resources</h3>

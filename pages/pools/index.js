@@ -273,7 +273,6 @@ export default function PoolsIndex() {
 
   return (
     <LayoutWithHeader showSignout={true} isMember={isMember}>
-      <ToastContainer position="bottom-center" />
       <div style={cardStyle}>
         <div style={{ 
           display: 'flex', 
