@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
-import { getWeb3, getMukandoPool, getErc20, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
+import { getWeb3, getMukandoPool, getErc20, isTreeOwner, isTreeMember, getPOLBalance } from '../../src/rosca/services/rosca';
 import Identicon from '../../src/components/common/Identicon';
 
 export default function PoolDetail() {
@@ -18,7 +18,7 @@ export default function PoolDetail() {
   const [info, setInfo] = useState(null);
   const [order, setOrder] = useState([]);
   const [token, setToken] = useState('');
-  const [decimals, setDecimals] = useState(18); // ETH default
+  const [decimals, setDecimals] = useState(18); // POL default
   const [loading, setLoading] = useState(true);
   const [isContributing, setIsContributing] = useState(false);
   const [isTriggeringPayout, setIsTriggeringPayout] = useState(false);
@@ -33,6 +33,7 @@ export default function PoolDetail() {
   const [totalRaised, setTotalRaised] = useState('0');
   const [balanceToTarget, setBalanceToTarget] = useState('0');
   const [allContributorsPaid, setAllContributorsPaid] = useState(false);
+  const [polBalance, setPolBalance] = useState('0');
 
   // Sync thirdweb connection state with local state
   useEffect(() => {
@@ -75,6 +76,10 @@ export default function PoolDetail() {
 
         const owner = await isTreeOwner(web3, account);
         setEligible(Boolean(owner));
+        
+        // Get POL balance
+        const balance = await getPOLBalance(web3, account);
+        setPolBalance(balance);
         
         const p = getMukandoPool(web3, address);
         setPool(p);
@@ -185,8 +190,8 @@ export default function PoolDetail() {
           console.warn('CurrentRecipient seems invalid:', currentRecipient);
         }
         const ord = await p.methods.getPayoutOrder().call();
-        // Try to detect if this is an old contract with token or new contract with ETH
-        let tokenAddress = '0x0000000000000000000000000000000000000000'; // Default to ETH
+        // Try to detect if this is an old contract with token or new contract with POL
+        let tokenAddress = '0x0000000000000000000000000000000000000000'; // Default to POL
         
         try {
           // Try to call token() function - if it exists, this is an old contract
@@ -195,8 +200,8 @@ export default function PoolDetail() {
             tokenAddress = token;
           }
         } catch (error) {
-          // token() function doesn't exist, so this is a new ETH contract
-          console.log('No token() function found - using ETH');
+          // token() function doesn't exist, so this is a new POL contract
+          console.log('No token() function found - using POL');
         }
         
         setToken(tokenAddress);
@@ -304,7 +309,7 @@ export default function PoolDetail() {
         console.log('roundOpen check failed:', error);
       }
       
-      // Check if this is an old contract (uses tokens) or new contract (uses ETH)
+              // Check if this is an old contract (uses tokens) or new contract (uses POL)
       if (token !== '0x0000000000000000000000000000000000000000') {
         // Old contract - use ERC20 tokens
         const erc = getErc20(web3, token);
@@ -325,21 +330,31 @@ export default function PoolDetail() {
         
         // Contribute
         await pool.methods.contribute().send({ from: account });
-      } else {
-        // New contract - use ETH
-        // Check user's ETH balance
-        const balance = await web3.eth.getBalance(account);
-        if (web3.utils.toBN(balance).lt(web3.utils.toBN(info.contribution))) {
-          toast.error('Insufficient ETH balance for contribution');
-          return;
+              } else {
+          // New contract - use POL
+          // Check user's POL balance
+          if (Number(polBalance) < Number(web3.utils.fromWei(info.contribution, 'ether'))) {
+            toast.error(`Insufficient POL balance. You have ${parseFloat(polBalance).toFixed(4)} POL`);
+            return;
+          }
+          
+          // Check if we're on local development (no POL token deployed)
+          const networkId = await web3.eth.net.getId();
+          const isLocalDev = networkId === 1337 || networkId === 5777;
+          
+          if (isLocalDev) {
+            // For local development, send ETH value directly
+            await pool.methods.contribute().send({ 
+              from: account,
+              value: info.contribution
+            });
+          } else {
+            // For production, use POL tokens (no value needed, tokens are transferred via approve/transferFrom)
+            await pool.methods.contribute().send({ 
+              from: account
+            });
+          }
         }
-        
-        // Contribute with ETH
-        await pool.methods.contribute().send({ 
-          from: account, 
-          value: info.contribution 
-        });
-      }
       toast.success('Contribution submitted successfully');
       
       // Update contribution status
@@ -352,7 +367,7 @@ export default function PoolDetail() {
       if (e?.code === 4001) {
         toast.error('User rejected transaction');
       } else if ((e?.message || '').toLowerCase().includes('insufficient')) {
-        toast.error('Insufficient ETH or gas. Please top up and try again.');
+        toast.error('Insufficient POL balance or gas. Please top up and try again.');
       } else if ((e?.message || '').toLowerCase().includes('not member')) {
         toast.error('You are not a member of this pool');
       } else if ((e?.message || '').toLowerCase().includes('already paid')) {
@@ -397,7 +412,7 @@ export default function PoolDetail() {
   const fmt = (v) => {
     try {
       if (!web3) return v;
-      // Convert wei to ETH (18 decimals)
+      // Convert wei to POL (18 decimals)
       const base = web3.utils.toBN(10).pow(web3.utils.toBN(18));
       const whole = web3.utils.toBN(v).div(base).toString();
       const frac = web3.utils.toBN(v).mod(base).toString().padStart(18, '0').slice(0, 2);
@@ -531,7 +546,7 @@ export default function PoolDetail() {
           <p>Loading...</p>
         ) : (
           <>  
-            <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)} ETH</div></div>
+            <div style={rowStyle}><div style={keyStyle}>Contribution</div><div style={valStyle}>{fmt(info.contribution)} POL</div></div>
             <div style={rowStyle}><div style={keyStyle}>Pool Size</div><div style={valStyle}>{info.size}</div></div>
             <div style={rowStyle}><div style={keyStyle}>Current round</div><div style={valStyle}>{Number(info.currentRound)}</div></div>
             <div style={rowStyle}>
@@ -556,6 +571,24 @@ export default function PoolDetail() {
               </div>
             </div>
             
+            {/* POL Balance Display */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: 16,
+              padding: '12px 16px',
+              background: 'linear-gradient(135deg, #00b894, #00a085)',
+              borderRadius: 12,
+              color: 'white',
+              fontSize: 14,
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(0, 184, 148, 0.3)'
+            }}>
+              <span style={{ marginRight: 8, fontSize: '16px' }}>💰</span>
+              <span>Your POL Balance: {parseFloat(polBalance).toFixed(4)} POL</span>
+            </div>
+            
             {/* Contribution Statistics */}
             <div style={{ 
               margin: '20px 0', 
@@ -572,11 +605,11 @@ export default function PoolDetail() {
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 24, fontWeight: 700, color: '#00b894' }}>{fmt(totalRaised)}</div>
-                  <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Total Raised (ETH)</div>
+                  <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Total Raised (POL)</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 24, fontWeight: 700, color: '#e17055' }}>{fmt(balanceToTarget)}</div>
-                  <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Balance to Target (ETH)</div>
+                  <div style={{ fontSize: 12, color: '#636e72', marginTop: 4 }}>Balance to Target (POL)</div>
                 </div>
               </div>
               {/* Progress Bar */}
@@ -638,10 +671,10 @@ export default function PoolDetail() {
                   marginTop: 8 
                 }}>
                   <span style={{ fontSize: 12, color: '#636e72' }}>
-                    Raised: <span style={{ fontWeight: 600, color: '#00b894' }}>{fmt(totalRaised)} ETH</span>
+                    Raised: <span style={{ fontWeight: 600, color: '#00b894' }}>{fmt(totalRaised)} POL</span>
                   </span>
                   <span style={{ fontSize: 12, color: '#636e72' }}>
-                    Target: <span style={{ fontWeight: 600, color: '#2d3436' }}>{fmt(web3?.utils?.toBN(info.contribution).mul(web3.utils.toBN(info.size)).toString() || '0')} ETH</span>
+                    Target: <span style={{ fontWeight: 600, color: '#2d3436' }}>{fmt(web3?.utils?.toBN(info.contribution).mul(web3.utils.toBN(info.size)).toString() || '0')} POL</span>
                   </span>
                 </div>
               </div>
@@ -663,7 +696,7 @@ export default function PoolDetail() {
                     background: (isContributing || isTriggeringPayout) ? '#e9ecef' : 'linear-gradient(135deg, #00b894 0%, #00a085 100%)',
                     border: 'none', borderRadius: 10, color: 'white', fontWeight: 700
                   }}>
-                    {isContributing ? 'Processing...' : token === '0x0000000000000000000000000000000000000000' ? 'Approve & Contribute' : 'Approve & Contribute'}
+                    {isContributing ? 'Processing...' : 'Approve & Contribute POL'}
                   </button>
                 )}
                 {roundPaid ? (

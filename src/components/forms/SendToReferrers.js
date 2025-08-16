@@ -251,7 +251,7 @@ const SendToReferrers = ({ web3, account }) => {
         console.warn('[SendToReferrers] getCode checks failed:', codeErr);
       }
       if (web3.utils.toBN(balance).lt(totalEthNeeded)) {
-        setError(`Insufficient balance. You need ${web3.utils.fromWei(totalEthNeeded, 'ether')} ETH`);
+        setError(`Insufficient balance. You need ${web3.utils.fromWei(totalEthNeeded, 'ether')} POL`);
         setLoading(false);
         return;
       }
@@ -309,7 +309,7 @@ const SendToReferrers = ({ web3, account }) => {
           gas: Math.floor(Number(estimatedGas) * 1.2) || undefined
         });
 
-      toast.success(`✅ Successfully sent ${ethAmountPerMember} ETH to ${referralChain.length} referrers!`);
+      toast.success(`✅ Successfully sent ${ethAmountPerMember} POL to ${referralChain.length} referrers!`);
       setHasPaid(true);
     } catch (err) {
       if (err.code === 4001) {
@@ -350,7 +350,7 @@ const SendToReferrers = ({ web3, account }) => {
         return;
       }
 
-      const membershipFee = web3.utils.toWei('0.01', 'ether');
+      const membershipFee = web3.utils.toWei('0.01', 'ether'); // Still using 'ether' for wei conversion
       
       // Check if user has sufficient balance
       const balance = await web3.eth.getBalance(account);

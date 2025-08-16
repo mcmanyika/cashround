@@ -240,9 +240,7 @@ export const LayoutWithHeader = ({ children, showSignout = false, client, isMemb
             {finalIsMember ? "Welcome Back! Refer And Earn Rewards." : "Join Our Network And Start Earning Rewards."}
           </LayoutSubtitle>
         </LayoutHeader>
-        <div>
           {children}
-        </div>
         <Footer />
       </LayoutCard>
     </Layout>

@@ -1,11 +1,11 @@
-// ETH configuration - using address(0) for native ETH
-// No specific addresses needed since ETH is the native currency
+// POL configuration - using POL token addresses
+import { getPOLTokenAddress } from '../../config/contractAddress';
 
-export const ETH_ADDRESS = '0x0000000000000000000000000000000000000000';
+export const POL_ADDRESS = '0x455e53CBB86018Ac2B8092FdCd39b8443aA31FE6';
 
 export const getDefaultTokenForChain = (chainId) => {
-  // Always return ETH address (address(0))
-  return ETH_ADDRESS;
+  // Return POL token address for the given chain
+  return getPOLTokenAddress(chainId);
 };
 
 

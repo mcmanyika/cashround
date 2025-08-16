@@ -3,6 +3,8 @@ import PoolFactoryAbi from '../../abis/PoolFactory.json';
 import RoscaPoolAbi from '../../abis/RoscaPool.json';
 import IERC20Abi from '../../abis/IERC20.json';
 import TreeAbi from '../../abis/Tree.json';
+import { createPOLService } from './polService';
+import { getPOLTokenAddress } from '../../config/contractAddress';
 
 export const getWeb3 = async () => {
   if (typeof window === 'undefined' || !window.ethereum) return null;
@@ -36,6 +38,10 @@ export const getFactory = (web3, factoryAddress) => {
 
 export const getMukandoPool = (web3, poolAddress) => {
   return new web3.eth.Contract(RoscaPoolAbi.abi, poolAddress);
+};
+
+export const getMukandoPoolPOL = (web3, poolAddress) => {
+  return new web3.eth.Contract(RoscaPoolAbi.abi, poolAddress); // Using same ABI for now
 };
 
 export const getErc20 = (web3, tokenAddress) => {
@@ -80,6 +86,50 @@ export const isTreeMember = async (web3, account) => {
     return data.inviter && data.inviter !== zero;
   } catch {
     return false;
+  }
+};
+
+// POL-related functions
+export const getPOLService = async (web3) => {
+  try {
+    const networkId = await web3.eth.net.getId();
+    return createPOLService(web3, networkId);
+  } catch (error) {
+    console.error('Error creating POL service:', error);
+    return null;
+  }
+};
+
+export const getPOLBalance = async (web3, account) => {
+  try {
+    const polService = await getPOLService(web3);
+    if (!polService) return '0';
+    return await polService.getBalance(account);
+  } catch (error) {
+    console.error('Error getting POL balance:', error);
+    return '0';
+  }
+};
+
+export const approvePOL = async (web3, spenderAddress, amount, fromAddress) => {
+  try {
+    const polService = await getPOLService(web3);
+    if (!polService) throw new Error('POL service not available');
+    return await polService.approve(spenderAddress, amount, fromAddress);
+  } catch (error) {
+    console.error('Error approving POL:', error);
+    throw error;
+  }
+};
+
+export const contributePOL = async (web3, poolAddress, amount, fromAddress) => {
+  try {
+    const pool = getMukandoPoolPOL(web3, poolAddress);
+    const result = await pool.methods.contribute().send({ from: fromAddress });
+    return result;
+  } catch (error) {
+    console.error('Error contributing POL:', error);
+    throw error;
   }
 };
 

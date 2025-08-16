@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
-import { getWeb3, getWeb3FromThirdwebWallet, getFactory, hasTwoLevelDownline, isTreeOwner, isTreeMember } from '../../src/rosca/services/rosca';
+import { getWeb3, getWeb3FromThirdwebWallet, getFactory, hasTwoLevelDownline, isTreeOwner, isTreeMember, getPOLBalance } from '../../src/rosca/services/rosca';
 import { getDefaultTokenForChain } from '../../src/rosca/config/tokens';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 
@@ -26,6 +26,7 @@ export default function CreatePool() {
   const [processing, setProcessing] = useState(false);
   const [eligible, setEligible] = useState(false);
   const [checkingMember, setCheckingMember] = useState(true);
+  const [polBalance, setPolBalance] = useState('0');
 
   useEffect(() => {
     (async () => {
@@ -63,6 +64,11 @@ export default function CreatePool() {
       
       // Allow attempt to create; contract enforces final rule
       setEligible(true);
+      
+      // Get POL balance
+      const balance = await getPOLBalance(w3, acct);
+      setPolBalance(balance);
+      
       setCheckingMember(false);
       // Set default start time on client to avoid SSR hydration drift
       try {
@@ -78,15 +84,26 @@ export default function CreatePool() {
     if (!web3 || !factory || !account) return;
     setProcessing(true);
     try {
-      // Convert ETH to wei
+      // Convert POL to wei
       const contributionInWei = web3.utils.toWei(contribution, 'ether');
       
-      // Validate minimum contribution (1 ETH)
+      // Validate minimum contribution (1 POL)
       if (Number(contribution) < 1) {
-        toast.error('Minimum contribution is 1 ETH');
+        toast.error('Minimum contribution is 1 POL');
         setProcessing(false);
         return;
       }
+      
+      // Check if user has enough POL balance
+      if (Number(polBalance) < Number(contribution)) {
+        toast.error(`Insufficient POL balance. You have ${parseFloat(polBalance).toFixed(4)} POL`);
+        setProcessing(false);
+        return;
+      }
+      
+      // Check if we're on local development
+      const networkId = await web3.eth.net.getId();
+      const isLocalDev = networkId === 1337 || networkId === 5777;
       
       const payoutOrder = orderCsv
         .split(',')
@@ -97,6 +114,11 @@ export default function CreatePool() {
         setProcessing(false);
         return;
       }
+      // For local development, we might need to handle differently
+      if (isLocalDev) {
+        console.log('Local development: Creating pool with ETH fallback');
+      }
+      
       await factory.methods
         .createPool(
           Number(size),
@@ -235,7 +257,7 @@ export default function CreatePool() {
               />
             </div>
             <div>
-            <div style={labelStyle}>Contribution (ETH)</div>
+            <div style={labelStyle}>Contribution (POL)</div>
             <input
               type="number"
               min="1"
@@ -248,7 +270,7 @@ export default function CreatePool() {
               onBlur={onBlur}
             />
             <div style={{ color: '#9aa0a6', fontSize: 12, marginTop: 6 }}>
-              Minimum contribution: 1 ETH.
+              Minimum contribution: 1 POL. Your balance: {parseFloat(polBalance).toFixed(4)} POL
             </div>
              
             </div>

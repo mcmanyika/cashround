@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { priceService } from '../services/priceService';
 
-export const useETHPrice = () => {
+export const usePOLPrice = () => {
   const [priceData, setPriceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,11 +10,11 @@ export const useETHPrice = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await priceService.getETHPrice();
+      const data = await priceService.getPOLPrice();
       setPriceData(data);
     } catch (err) {
       setError(err.message);
-      console.error('Error fetching ETH price:', err);
+      console.error('Error fetching POL price:', err);
     } finally {
       setLoading(false);
     }
@@ -30,9 +30,9 @@ export const useETHPrice = () => {
   }, [fetchPrice]);
 
   // Helper functions
-  const calculateUSDValue = useCallback((ethAmount) => {
+  const calculateUSDValue = useCallback((polAmount) => {
     if (!priceData || !priceData.price) return '0.00';
-    return priceService.calculateUSDValue(ethAmount, priceData.price);
+    return priceService.calculateUSDValue(polAmount, priceData.price);
   }, [priceData]);
 
   const formatPrice = useCallback((decimals = 4) => {

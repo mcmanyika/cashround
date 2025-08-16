@@ -14,6 +14,11 @@ NEXT_PUBLIC_TREE_CONTRACT_ADDRESS_LOCAL=""
 # Pool Factory Address
 NEXT_PUBLIC_POOL_FACTORY_ADDRESS=""
 
+# POL Token Configuration
+NEXT_PUBLIC_POL_TOKEN_ADDRESS_POLYGON="0x455e53CBB86018Ac2B8092FdCd39b8443aA31FE6"
+NEXT_PUBLIC_POL_TOKEN_ADDRESS_AMOY=""
+NEXT_PUBLIC_POL_TOKEN_ADDRESS_LOCAL=""
+
 # Network Configuration
 NEXT_PUBLIC_NETWORK_ID="137"
 
@@ -32,6 +37,12 @@ NEXT_PUBLIC_COINMARKETCAP_API_KEY="your_coinmarketcap_api_key_here"
 ### Pool Factory Address
 
 - `NEXT_PUBLIC_POOL_FACTORY_ADDRESS`: The Pool Factory contract address
+
+### POL Token Configuration
+
+- `NEXT_PUBLIC_POL_TOKEN_ADDRESS_POLYGON`: The POL token contract address on Polygon mainnet (137)
+- `NEXT_PUBLIC_POL_TOKEN_ADDRESS_AMOY`: The POL token contract address on Polygon Amoy testnet (80002)
+- `NEXT_PUBLIC_POL_TOKEN_ADDRESS_LOCAL`: The POL token contract address for local development (5777/1337)
 
 ### Network Configuration
 

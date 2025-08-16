@@ -16453,10 +16453,73 @@
   },
   "networks": {
     "137": {
-      "events": {},
+      "events": {
+        "0xf19328fe5783dfe256066fba6d6aaab1f41e3c5331940024887c1ef8f080d91d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "Count",
+              "type": "uint256"
+            }
+          ],
+          "name": "Payments",
+          "type": "event"
+        },
+        "0x9401c4696aa930450b5eb88e4f708151abe4e3436bad9da4c0544e05ec062045": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "member",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "inviter",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "subscription",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "Count",
+              "type": "uint256"
+            }
+          ],
+          "name": "Summary",
+          "type": "event"
+        }
+      },
       "links": {},
-      "address": "0xb7fd0c9708edd8b3b6a454ba09d4de2838af1608",
-      "transactionHash": ""
+      "address": "0xF9e8f75c7cFe3aA647355C9364081A42472959A3",
+      "transactionHash": "0x8253132aee922c128f9dd28a096a6a8286d7871c6754d1151fc76829872ff97a"
     },
     "1337": {
       "events": {},
@@ -16469,10 +16532,16 @@
       "links": {},
       "address": "0xE20677F28c03F92Ff84C76BC8AF419a6e2D9D6e3",
       "transactionHash": "0xb164604e3e0068e15a269b6bf0308a858866f7f4670d4f8023d84b342a48f9f5"
+    },
+    "80002": {
+      "events": {},
+      "links": {},
+      "address": "0x3510976D4dbdE8419Cd6C640F25A639D1aA87d6F",
+      "transactionHash": "0xdc1730ee72969cad8e566b9851ebf1a74dd28b4e06147bde878fe89371df4c64"
     }
   },
-  "schemaVersion": "3.4.16",
-  "updatedAt": "2025-08-10T11:47:09.385Z",
+  "schemaVersion": "3.4.4",
+  "updatedAt": "2025-08-16T15:23:18.468Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

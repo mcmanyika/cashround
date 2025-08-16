@@ -37,7 +37,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
   const activeWallet = useActiveWallet();
   const { priceData, loading: priceLoading, calculateUSDValue, formatPrice, price } = usePriceContext();
   const [referrerAddress, setReferrerAddress] = useState('');
-  const [ethAmount, setEthAmount] = useState('0.001');
+  const [polAmount, setPolAmount] = useState('0.001');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -53,10 +53,10 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
 
   // Helpers for friendly error messages
   const getNativeTokenLabel = (id) => {
-    if (id === 137 || id === 80002) return 'POL';
-    return 'ETH';
+    // Always return POL for all networks
+    return 'POL';
   };
-  const formatWei = (wei) => (web3 ? web3.utils.fromWei(wei, 'ether') : '0');
+  const formatWei = (wei) => (web3 ? web3.utils.fromWei(wei, 'ether') : '0'); // Still using 'ether' for wei conversion
   const buildInsufficientFundsMsg = (requiredWei, balanceWei) => {
     const symbol = getNativeTokenLabel(networkId);
     const required = formatWei(requiredWei);
@@ -162,8 +162,8 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
               
               // Add direct payments and payments from all levels
               const grandTotal = totalReceived.add(totalFromAllLevels);
-              const totalInEth = web3.utils.fromWei(grandTotal, 'ether');
-              setTotalAmountReceived(totalInEth);
+                    const totalInPol = web3.utils.fromWei(grandTotal, 'ether');
+      setTotalAmountReceived(totalInPol);
             } catch (error) {
               console.error('Error fetching total amount received:', error);
               setTotalAmountReceived('0');
@@ -236,7 +236,7 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
       return;
     }
 
-    // ETH amount is fixed, no need to validate
+    // POL amount is fixed, no need to validate
 
     // Validate referrer address format
     if (!web3.utils.isAddress(referrerAddress)) {
@@ -259,20 +259,20 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
         return;
       }
 
-      const ethAmountWei = web3.utils.toWei(ethAmount, 'ether');
+      const polAmountWei = web3.utils.toWei(polAmount, 'ether');
 
       // Preflight: estimate gas and verify balance covers value + gas
       try {
         const estimatedGas = await contract.methods
           .enter(referrerAddress, referrerAddress)
-          .estimateGas({ from: account, value: ethAmountWei });
+          .estimateGas({ from: account, value: polAmountWei });
         let gasPrice = await web3.eth.getGasPrice();
         if (!gasPrice || gasPrice === '0') {
           // Fallback for local networks like Ganache that may return 0
           gasPrice = web3.utils.toWei('20', 'gwei');
         }
         const totalRequiredWei = web3.utils
-          .toBN(ethAmountWei)
+          .toBN(polAmountWei)
           .add(web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas)));
         const balanceWei = await web3.eth.getBalance(account);
         if (web3.utils.toBN(balanceWei).lt(totalRequiredWei)) {
@@ -294,11 +294,11 @@ const ReferralForm = ({ web3, account, setIsMember }) => {
 
       // Call the enter function
       await contract.methods.enter(referrerAddress, referrerAddress)
-        .send({ from: account, value: ethAmountWei });
+        .send({ from: account, value: polAmountWei });
 
       toast.success('Successfully joined the referral tree!');
       setReferrerAddress('');
-      // Keep the fixed ETH amount
+      // Keep the fixed POL amount
       setShowBecomeMember(true);
       
       // Redirect to SendToReferrers component after successful submission

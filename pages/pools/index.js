@@ -5,7 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { useActiveWallet, useActiveAccount } from 'thirdweb/react';
 import { getWeb3FromThirdwebWallet } from '../../src/rosca/services/rosca';
 import { LayoutWithHeader, LayoutLoading } from '../../src/components/layout/Layout';
-import { getWeb3, getFactory, getMukandoPool, isTreeMember, isTreeOwner, hasTwoLevelDownline } from '../../src/rosca/services/rosca';
+import { getWeb3, getFactory, getMukandoPool, isTreeMember, isTreeOwner, hasTwoLevelDownline, getPOLBalance } from '../../src/rosca/services/rosca';
 
 
 // NOTE: set this via .env in real usage
@@ -30,6 +30,7 @@ export default function PoolsIndex() {
   const [showMyPoolsOnly, setShowMyPoolsOnly] = useState(false);
   const [myPools, setMyPools] = useState([]);
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [polBalance, setPolBalance] = useState('0');
 
   // Sync thirdweb connection state with local state
   useEffect(() => {
@@ -91,6 +92,10 @@ export default function PoolsIndex() {
         const hasDownlines = await hasTwoLevelDownline(web3, account);
         const canCreatePools = isOwner || hasDownlines;
         setCanCreate(canCreatePools);
+
+        // Get POL balance
+        const balance = await getPOLBalance(web3, account);
+        setPolBalance(balance);
 
         setCheckingMember(false); // Member check complete
 
@@ -362,6 +367,24 @@ export default function PoolsIndex() {
           </div>
         </div>
         
+        {/* POL Balance Display */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 16,
+          padding: '12px 16px',
+          background: 'linear-gradient(135deg, #00b894, #00a085)',
+          borderRadius: 12,
+          color: 'white',
+          fontSize: 14,
+          fontWeight: 600,
+          boxShadow: '0 4px 12px rgba(0, 184, 148, 0.3)'
+        }}>
+          <span style={{ marginRight: 8, fontSize: '16px' }}>💰</span>
+          <span>POL Balance: {parseFloat(polBalance).toFixed(4)} POL</span>
+        </div>
+        
         {/* Search Bar */}
         <div style={{ 
           marginTop: 16, 
@@ -486,7 +509,7 @@ export default function PoolsIndex() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#2d3436' }}>{shorten(p.address)}</span>
                       <span style={{ color: '#636e72', fontSize: 12 }}>
-                        Pool Size: {String(p.size)} • Contribution: {fmt(p.contribution)} ETH
+                        Pool Size: {String(p.size)} • Contribution: {fmt(p.contribution)} POL
                       </span>
                     </div>
                   </div>
