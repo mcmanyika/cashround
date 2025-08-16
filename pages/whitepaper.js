@@ -7,8 +7,8 @@ export default function Whitepaper() {
   return (
     <>
       <Head>
-        <title>Mukando - Technical White Paper</title>
-        <meta name="description" content="Technical white paper for Mukando - Decentralized MUKANDO platform" />
+        <title>Cash Round - Technical White Paper</title>
+        <meta name="description" content="Technical white paper for Cash Round - Decentralized MUKANDO platform" />
       </Head>
       
       <LayoutWithHeader>
@@ -24,21 +24,18 @@ export default function Whitepaper() {
             <p className="text-gray-500" style={{ textAlign: 'left' }}>
               Version 1.0 | August 2025
             </p>
-            <p className="text-gray-500" style={{ textAlign: 'left' }}>
-              Developed by Partson Manyika
-            </p>
           </div>
 
           {/* Executive Summary */}
           <section className="bg-white rounded-lg shadow-lg p-8 mb-8" style={{ textAlign: 'left' }}>
             <h2 className="text-2xl font-bold text-gray-900 mb-4" style={{ textAlign: 'left' }}>Executive Summary</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Mukando is a decentralized platform that digitizes traditional MUKANDO (Rotating Savings and Credit Association) 
+              Cash Round is a decentralized platform that digitizes traditional MUKANDO (Rotating Savings and Credit Association) 
               systems using blockchain technology. The platform combines the proven economic model of rotating savings with 
               modern DeFi infrastructure, creating a secure, transparent, and accessible financial tool for communities worldwide.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              By leveraging smart contracts on the Polygon network, Mukando eliminates the need for trusted intermediaries 
+              By leveraging smart contracts on the Polygon network, Cash Round eliminates the need for trusted intermediaries 
               while maintaining the social and economic benefits of traditional MUKANDO systems. The platform includes an 
               innovative referral system that incentivizes community growth and participation.
             </p>
@@ -85,7 +82,7 @@ export default function Whitepaper() {
             
             <h3 className="text-xl font-semibold text-gray-800 mb-3">Decentralized MUKANDO Platform</h3>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Mukando transforms traditional MUKANDO systems into decentralized, trustless protocols using blockchain technology. 
+              Cash Round transforms traditional MUKANDO systems into decentralized, trustless protocols using blockchain technology. 
               The platform consists of three core components:
             </p>
 
@@ -103,7 +100,7 @@ export default function Whitepaper() {
                 </p>
               </div>
               <div className="bg-purple-50 p-6 rounded-lg">
-                <h4 className="font-semibold text-purple-900 mb-2">MukandoPool</h4>
+                <h4 className="font-semibold text-purple-900 mb-2">CashRoundPool</h4>
                 <p className="text-purple-800 text-sm">
                   Individual pool contracts that execute the rotating savings logic
                 </p>
@@ -185,7 +182,7 @@ export default function Whitepaper() {
               </ul>
             </div>
 
-            <h3 className="text-xl font-semibold text-gray-800 mb-3">MukandoPool Contract</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-3">CashRoundPool Contract</h3>
             <div className="bg-gray-50 p-6 rounded-lg mb-6">
               <h4 className="font-semibold text-gray-800 mb-2">Purpose: Individual Pool Execution</h4>
               <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
@@ -335,7 +332,7 @@ export default function Whitepaper() {
           <section className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Conclusion</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Mukando represents a significant advancement in democratizing access to financial services through 
+              Cash Round represents a significant advancement in democratizing access to financial services through 
               blockchain technology. By combining the proven economic model of MUKANDO systems with modern DeFi 
               infrastructure, the platform creates a sustainable, scalable solution for financial inclusion.
             </p>
@@ -345,7 +342,7 @@ export default function Whitepaper() {
               preserving the community-driven nature of rotating savings associations.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              As the platform evolves, Mukando aims to become the global standard for decentralized community 
+              As the platform evolves, Cash Round aims to become the global standard for decentralized community 
               finance, bridging the gap between traditional financial practices and modern blockchain technology.
             </p>
           </section>
@@ -357,7 +354,7 @@ export default function Whitepaper() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Platform Access</h3>
                 <Link href="/" className="text-blue-600 hover:text-blue-800 block mb-2">
-                  → Access Mukando Platform
+                  → Access Cash Round Platform
                 </Link>
               </div>
               <div>

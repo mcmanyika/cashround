@@ -162,7 +162,7 @@ const Footer = () => {
               fontSize: '13px',
               fontWeight: '600',
               color: '#2d3436'
-            }}>Mukando</span>
+            }}>Cash Round</span>
           </div>
           
           <div className="footer-copyright" style={{
@@ -171,8 +171,8 @@ const Footer = () => {
             marginTop: '4px',
             lineHeight: '1.2'
           }}>
-            © {new Date().getFullYear()} Mukando. 
-            Decentralized CASH ROUND Platform.
+            © {new Date().getFullYear()} Cash Round. 
+            Decentralized Mukando Platform.
           </div>
         </div>
       </div>

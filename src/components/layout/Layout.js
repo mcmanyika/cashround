@@ -235,7 +235,7 @@ export const LayoutWithHeader = ({ children, showSignout = false, client, isMemb
               <LayoutLogoBadge>$</LayoutLogoBadge>
             </LayoutLogo>
           </Link>
-          <LayoutTitle className="uppercase">Mukando</LayoutTitle>
+          <LayoutTitle className="uppercase">Cash Round</LayoutTitle>
           <LayoutSubtitle>
             {finalIsMember ? "Welcome Back! Refer And Earn Rewards." : "Join Our Network And Start Earning Rewards."}
           </LayoutSubtitle>
